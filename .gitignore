@@ -1,0 +1,6 @@
+.idea
+bin/dafny/*
+**/*.jar
+**/target
+
+!bin/dafny/.keep
