@@ -1,20 +1,22 @@
 package com.github.nhweston.dfydoc
 
-import com.github.nhweston.dfydoc.Symbol.FunctionKind.FunctionKind
-import com.github.nhweston.dfydoc.Symbol.MethodKind.MethodKind
-import com.github.nhweston.dfydoc.Symbol.Modifier.Modifier
-import com.github.nhweston.dfydoc.Symbol.SpecKind.SpecKind
-import com.github.nhweston.dfydoc.Symbol._
+import com.github.nhweston.dfydoc.DocNode.FunctionKind.FunctionKind
+import com.github.nhweston.dfydoc.DocNode.MethodKind.MethodKind
+import com.github.nhweston.dfydoc.DocNode.Modifier.Modifier
+import com.github.nhweston.dfydoc.DocNode.SpecKind.SpecKind
+import com.github.nhweston.dfydoc.DocNode._
+import laika.api.Transformer
+import laika.format.{HTML, Markdown}
 import play.api.libs.json._
 
 import scala.xml.{Node, Text}
 
-sealed trait Symbol {
+sealed trait DocNode {
 
   lazy val toHtml: Node =
     this match {
 
-      case Module(name, modifiers, refines, decls) =>
+      case Module(name, modifiers, refines, decls, doc) =>
         val xKeywords = Text((modifiers :+ "module").mkString(" "))
         val xName = <b>{name}</b>
         val xRefines =
@@ -27,7 +29,7 @@ sealed trait Symbol {
           {decls.map(_.toHtml)}
         </div>
 
-      case Class(name, isTrait, tparams, xtnds, members) =>
+      case Class(name, isTrait, tparams, xtnds, members, doc) =>
         val xKeyword = Text(if (isTrait) "trait" else "class")
         val xName = Text(name)
         val xTParams = tparams.toHtml
@@ -41,7 +43,7 @@ sealed trait Symbol {
           {members.map(_.toHtml)}
         </div>
 
-      case Datatype(name, isCodata, tparams, ctors) =>
+      case Datatype(name, isCodata, tparams, ctors, doc) =>
         val xKeyword = Text(if (isCodata) "codatatype" else "datatype")
         val xName = <b>{name}</b>
         val xTParams = tparams.toHtml
@@ -51,7 +53,7 @@ sealed trait Symbol {
           <ul>{xCtors}</ul>
         </div>
 
-      case TypeSynonym(name, tparams, rhs) =>
+      case TypeSynonym(name, tparams, rhs, doc) =>
         val xKeyword = Text("type")
         val xName = <b>{name}</b>
         val xTParams = tparams.toHtml
@@ -64,7 +66,7 @@ sealed trait Symbol {
           <p>{xKeyword} {xName}{xTParams}{xRhs}</p>
         </div>
 
-      case Newtype(name, btyp, constraint) =>
+      case Newtype(name, btyp, constraint, doc) =>
         val xKeyword = Text("newtype")
         val xName = <b>{name}</b>
         val xBtyp = Text(btyp)
@@ -73,7 +75,7 @@ sealed trait Symbol {
           <p>{xKeyword} {xName} = {xBtyp} | {xConstraint}</p>
         </div>
 
-      case Function(name, kind, modifiers, tparams, vparams, rtyp, spec) =>
+      case Function(name, kind, modifiers, tparams, vparams, rtyp, spec, doc) =>
         val xKeywords = (modifiers :+ kind).mkString(" ")
         val xName = <b>{name}</b>
         val xTParams = tparams.toHtml
@@ -83,7 +85,7 @@ sealed trait Symbol {
           <p>{xKeywords} {xName}{xTParams}{xVParams}: {xRTyp}</p>
         </div>
 
-      case Method(name, kind, modifiers, tparams, vparams, returns, spec) =>
+      case Method(name, kind, modifiers, tparams, vparams, returns, spec, doc) =>
         val xKeywords = (modifiers :+ kind).mkString(" ")
         val xName = <b>{name}</b>
         val xTParams = tparams.toHtml
@@ -93,7 +95,7 @@ sealed trait Symbol {
           <p>{xKeywords} {xName}{xTParams}{xVParams}<br/>returns {xReturns}</p>
         </div>
 
-      case Field(name, typ) =>
+      case Field(name, typ, doc) =>
         val xKeyword = "var"
         val xName = <b>{name}</b>
         val xTyp = Text(typ)
@@ -105,11 +107,13 @@ sealed trait Symbol {
 
 }
 
-object Symbol {
+object DocNode {
+
+  val transf = Transformer.from(Markdown).to(HTML).build
 
   case class File(
     name: String,
-    decls: Seq[Symbol],
+    decls: Seq[DocNode],
   ) {
     lazy val toHtml: Node =
       <html>
@@ -212,16 +216,18 @@ object Symbol {
     name: String,
     modifiers: Seq[Modifier],
     refines: Option[String],
-    decls: Seq[Symbol],
-  ) extends Symbol
+    decls: Seq[DocNode],
+    doc: Option[String],
+  ) extends DocNode
 
   case class Class(
     name: String,
     isTrait: Boolean,
     tparams: TParams,
     xtnds: Seq[String],
-    members: Seq[Symbol],
-  ) extends Symbol
+    members: Seq[DocNode],
+    doc: Option[String],
+  ) extends DocNode
 
   ///////////
   // TYPES //
@@ -232,19 +238,22 @@ object Symbol {
     isCodata: Boolean,
     tparams: TParams,
     ctors: Seq[Ctor],
-  ) extends Symbol
+    doc: Option[String],
+  ) extends DocNode
 
   case class TypeSynonym(
     name: String,
     tparams: TParams,
     rhs: Option[String],
-  ) extends Symbol
+    doc: Option[String],
+  ) extends DocNode
 
   case class Newtype(
     name: String,
     btyp: String,
     constraint: String,
-  ) extends Symbol
+    doc: Option[String],
+  ) extends DocNode
 
   /////////////
   // MEMBERS //
@@ -258,7 +267,8 @@ object Symbol {
     vparams: VParams,
     rtyp: String,
     spec: Seq[Spec],
-  ) extends Symbol
+    doc: Option[String],
+  ) extends DocNode
 
   case class Method(
     name: String,
@@ -268,18 +278,20 @@ object Symbol {
     vparams: VParams,
     returns: VParams,
     spec: Seq[Spec],
-  ) extends Symbol
+    doc: Option[String],
+  ) extends DocNode
 
   case class Field(
     name: String,
     typ: String,
-  ) extends Symbol
+    doc: Option[String],
+  ) extends DocNode
 
-  implicit lazy val fmtDecl: Format[Symbol] =
-    new OFormat[Symbol]() {
+  implicit lazy val fmtDecl: Format[DocNode] =
+    new OFormat[DocNode]() {
       case class Aux(__type: String)
       val readsAux = Json.reads[Aux]
-      override def reads(json: JsValue): JsResult[Symbol] =
+      override def reads(json: JsValue): JsResult[DocNode] =
         readsAux.reads(json) match {
           case JsSuccess(Aux(kind), _) =>
             (kind.split(':').head match {
@@ -294,7 +306,7 @@ object Symbol {
             }).reads(json)
           case e @ JsError(_) => e
         }
-      override def writes(o: Symbol): JsObject =
+      override def writes(o: DocNode): JsObject =
         o match {
           case m: Module => fmtModule.writes(m)
           case c: Class => fmtClass.writes(c)

@@ -11,7 +11,7 @@ import scala.annotation.tailrec
 object ServerRunner {
 
   val Eom = """.*\[\[DAFNY-SERVER: EOM\]\]""".r
-  val Symbols = """SYMBOLS_START (.*) SYMBOLS_END""".r
+  val DocTree = """DOCTREE_START (.*) DOCTREE_END""".r
 
   def apply(
     serverPath: String,
@@ -30,7 +30,7 @@ object ServerRunner {
       line match {
         case null => read(result)
         case Eom() => result.getOrElse(JsNull)
-        case Symbols(symbols) => read(Some(Json.parse(symbols)))
+        case DocTree(doctree) => read(Some(Json.parse(doctree)))
         case _ => read(result)
       }
     }
@@ -38,7 +38,7 @@ object ServerRunner {
     val fileName = filePath.split('/').last
     val json = s"""{"args":[],"filename":"$fileName","source":"$filePath","sourceIsFile":true}"""
     val enc = Base64.getEncoder.encodeToString(json.getBytes)
-    out.write(s"symbols\n$enc\n[[DAFNY-CLIENT: EOM]]\n".getBytes)
+    out.write(s"doctree\n$enc\n[[DAFNY-CLIENT: EOM]]\n".getBytes)
     out.flush()
     val result = read()
 

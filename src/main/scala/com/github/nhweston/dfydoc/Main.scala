@@ -1,6 +1,6 @@
 package com.github.nhweston.dfydoc
 
-import com.github.nhweston.dfydoc.Symbol.File
+import com.github.nhweston.dfydoc.DocNode.File
 import com.github.nhweston.dfydoc.Util._
 import play.api.libs.json.{JsError, JsSuccess, Reads}
 
@@ -41,7 +41,7 @@ object Main {
     val json = ServerRunner(serverPath, filePath, verbose)
     if (opts(PrintTreeAsJson))
       println(pprintJson(json))
-    else Reads.seq[Symbol].reads(json) match {
+    else Reads.seq[DocNode].reads(json) match {
       case JsSuccess(symbols, _) =>
         if (opts(PrintTree))
           pprint.pprintln(symbols)
