@@ -1,7 +1,7 @@
 package com.github.nhweston.dfydoc
 
-import com.github.nhweston.dfydoc.DocNode.File
 import com.github.nhweston.dfydoc.Util._
+import com.github.nhweston.dfydoc.node.File
 import play.api.libs.json.{JsError, JsSuccess, Reads}
 
 import scala.annotation.tailrec
