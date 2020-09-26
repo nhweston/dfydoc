@@ -8,7 +8,7 @@ import scala.xml.{Node, Text}
 case class Class(
   name: String,
   isTrait: Boolean,
-  tparams: TypeParams,
+  tparams: Seq[TypeParam],
   xtnds: Seq[String],
   members: Seq[DocNode],
   doc: Option[String],
@@ -16,7 +16,7 @@ case class Class(
 
   lazy val _kws = Text(if (isTrait) "trait" else "class")
   lazy val _name = Text(name)
-  lazy val _tparams = tparams.toHtml
+  lazy val _tparams = TypeParam.toHtml(tparams)
   lazy val _xtnds =
     xtnds match {
       case Nil => Text("")
@@ -26,6 +26,7 @@ case class Class(
   override lazy val toHtml: Node =
     <div class="sub">
       <p>{_kws} {_name}{_tparams}{_xtnds}</p>
+      {_doc}
       {members.map(_.toHtml)}
     </div>
 

@@ -19,6 +19,7 @@ case class Newtype(
   override lazy val toHtml: Node =
     <div class="member">
       <p>{_kws} {_name} = {_btyp} | {_constr}</p>
+      {_doc}
     </div>
 
 }

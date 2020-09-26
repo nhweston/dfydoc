@@ -25,6 +25,7 @@ case class Module(
   override lazy val toHtml: Node =
     <div class="sub">
       <p>{_kws} {_name}{_ref}</p>
+      {_doc}
       {decls.map(_.toHtml)}
     </div>
 

@@ -17,6 +17,7 @@ case class Field(
   override lazy val toHtml: Node =
     <div>
       <p>{_kwd} {_name}: {_typ}</p>
+      {_doc}
     </div>
 
 }

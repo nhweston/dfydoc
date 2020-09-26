@@ -10,22 +10,23 @@ case class Method(
   name: String,
   kind: MethodKind,
   modifiers: Seq[Modifier],
-  tparams: TypeParams,
-  vparams: ValueParams,
-  returns: ValueParams,
+  tparams: Seq[TypeParam],
+  vparams: Seq[ValueParam],
+  returns: Seq[ValueParam],
   spec: Seq[Spec],
   doc: Option[String],
 ) extends Decl {
 
   lazy val _kws = (modifiers :+ kind).mkString(" ")
   lazy val _name = <b>{name}</b>
-  lazy val _tparams = tparams.toHtml
-  lazy val _vparams = vparams.toHtml
-  lazy val _ret = returns.toHtml
+  lazy val _tparams = TypeParam.toHtml(tparams)
+  lazy val _vparams = ValueParam.toHtml(vparams)
+  lazy val _ret = ValueParam.toHtml(returns)
 
   override lazy val toHtml: Node =
     <div>
       <p>{_kws} {_name}{_tparams}{_vparams}<br/>returns {_ret}</p>
+      {_doc}
     </div>
 
 }

@@ -4,9 +4,10 @@ import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
 
-case class Formal(
+case class ValueParam(
   name: Option[String],
   typ: String,
+  doc: Option[String],
 ) {
 
   lazy val toHtml: Node =
@@ -17,8 +18,14 @@ case class Formal(
 
 }
 
-object Formal {
+object ValueParam {
 
-  implicit lazy val fmtFormal = Json.format[Formal]
+  def toHtml(vps: Seq[ValueParam]): Node =
+    vps match {
+      case Nil => Text("()")
+      case vps => Text(vps.mkString("(", ", ", ")"))
+    }
+
+  implicit lazy val fmtFormal = Json.format[ValueParam]
 
 }

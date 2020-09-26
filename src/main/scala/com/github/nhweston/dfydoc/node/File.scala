@@ -9,6 +9,8 @@ case class File(
   decls: Seq[DocNode],
 ) extends DocNode {
 
+  override def doc: Option[String] = None
+
   override lazy val toHtml: Node =
     <html>
       <head>

@@ -10,8 +10,8 @@ case class Function(
   name: String,
   kind: FunctionKind,
   modifiers: Seq[Modifier],
-  tparams: TypeParams,
-  vparams: ValueParams,
+  tparams: Seq[TypeParam],
+  vparams: Seq[ValueParam],
   rtyp: String,
   spec: Seq[Spec],
   doc: Option[String],
@@ -19,13 +19,14 @@ case class Function(
 
   lazy val _kws = (modifiers :+ kind).mkString(" ")
   lazy val _name = <b>{name}</b>
-  lazy val _tparams = tparams.toHtml
-  lazy val _vparams = vparams.toHtml
+  lazy val _tparams = TypeParam.toHtml(tparams)
+  lazy val _vparams = ValueParam.toHtml(vparams)
   lazy val _rtyp = Text(rtyp)
 
   override lazy val toHtml: Node =
     <div class="member">
       <p>{_kws} {_name}{_tparams}{_vparams}: {_rtyp}</p>
+      {_doc}
     </div>
 
 }

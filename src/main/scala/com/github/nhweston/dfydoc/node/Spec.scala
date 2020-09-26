@@ -4,7 +4,7 @@ import com.github.nhweston.dfydoc.DocNode
 import com.github.nhweston.dfydoc.node.Spec._
 import play.api.libs.json.Json
 
-import scala.xml.{Node, Text}
+import scala.xml.Node
 
 case class Spec(
   kind: SpecKind,
