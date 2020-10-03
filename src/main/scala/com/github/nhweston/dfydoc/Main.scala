@@ -1,10 +1,9 @@
 package com.github.nhweston.dfydoc
 
-import com.github.nhweston.dfydoc.Util._
-import com.github.nhweston.dfydoc.node.File
-import play.api.libs.json.{JsError, JsSuccess, Reads}
+import java.io.File
 
-import scala.annotation.tailrec
+import com.github.nhweston.dfydoc.Options._
+import com.github.nhweston.dfydoc.node.{SrcDir, SrcFile}
 
 object Main {
 
@@ -19,69 +18,92 @@ object Main {
 
   def main(args: Array[String]): Unit =
     args.toSeq match {
-      case programName +: serverPath +: filePath +: tl =>
-        parseOptions(programName, tl) match {
-          case Right(opts) =>
-            run(serverPath, filePath, opts)
+      case programName +: serverPath +: tl =>
+        Options(programName, tl) match {
+
+          case Right(Generate(in, out, verbose)) =>
+            implicit val sr = ServerRunner(serverPath, verbose)
+            SrcDir(new File(in), new File(out), "root").write()
+
+          case Right(Print(file, content, verbose)) =>
+            println(file)
+            println((new File(file)).getAbsolutePath)
+            implicit val sr = ServerRunner(serverPath, verbose)
+            content match {
+              case Doc =>
+                val f = new File(file)
+                val sf = SrcFile(new File(f.getParent), new File("."), f.getName)
+                println("<!DOCTYPE html>")
+                println(sf.toHtml.toString)
+              case DocTree =>
+                Printer(new File(file), false).print()
+              case DocTreeJson =>
+                Printer(new File(file), true).print()
+            }
+
           case Left(msg) =>
             println(msg)
+
         }
-      case programName +: _ +: _ =>
-        println(usage(programName))
       case x =>
         throw new MatchError(x)
     }
 
-  def run(
+  def runAll(
     serverPath: String,
-    filePath: String,
-    opts: Set[ProgramOptions],
+    inPath: String,
+    outPath: String,
+    opts: Set[ProgramOptions]
   ): Unit = {
     val verbose = opts(Verbose)
-    val json = ServerRunner(serverPath, filePath, verbose)
-    if (opts(PrintTreeAsJson))
-      println(pprintJson(json))
-    else Reads.seq[DocNode].reads(json) match {
-      case JsSuccess(symbols, _) =>
-        if (opts(PrintTree))
-          pprint.pprintln(symbols)
-        else {
-          val fileName = filePath.split('/').last.split('.').head
-          val file = File(fileName, symbols)
-          println("<!DOCTYPE html>")
-          println(file.toHtml.toString)
-        }
-      case e @ JsError(_) =>
-        println(pprintJson(JsError.toJson(e)))
-    }
+    implicit val sr = ServerRunner(serverPath, verbose)
+    SrcDir(new File(inPath), new File(outPath), "root").write()
   }
 
-  def parseOptions(
-    programName: String,
-    opts: Seq[String]
-  ): Either[String, Set[ProgramOptions]] = {
-    @tailrec
-    def aux(
-      result: Set[ProgramOptions] = Set.empty,
-      opts: Seq[String] = opts,
-    ): Either[String, Set[ProgramOptions]] =
-      opts match {
-        case "-j" +: tl => aux(result + PrintTreeAsJson, tl)
-        case "-t" +: tl => aux(result + PrintTree, tl)
-        case "-v" +: tl => aux(result + Verbose, tl)
-        case Nil =>
-          if (result(PrintTree) && result(PrintTreeAsJson))
-            Left("-j and -t are mutually exclusive")
-          else Right(result)
-        case _ => Left(usage(programName))
-      }
-    aux()
-  }
-
-  def usage(programName: String): String =
-    s"""Usage: $programName file [options]
-       |    -j  print the symbol tree as a JSON
-       |    -t  print the symbol tree
-       |    -v  verbose mode""".stripMargin
+//  def run(
+//    serverPath: String,
+//    filePath: String,
+//    opts: Set[ProgramOptions],
+//  ): Unit = {
+//    val verbose = opts(Verbose)
+//    val json = ServerRunner(serverPath, filePath, verbose)
+//    if (opts(PrintTreeAsJson))
+//      println(pprintJson(json))
+//    else Reads.seq[DocNode].reads(json) match {
+//      case JsSuccess(symbols, _) =>
+//        if (opts(PrintTree))
+//          pprint.pprintln(symbols)
+//        else {
+//          val fileName = filePath.split('/').last.split('.').head
+//          val file = SrcFile(fileName, symbols)
+//          println("<!DOCTYPE html>")
+//          println(file.toHtml.toString)
+//        }
+//      case e @ JsError(_) =>
+//        println(pprintJson(JsError.toJson(e)))
+//    }
+//  }
+//
+//  def parseOptions(
+//    programName: String,
+//    opts: Seq[String]
+//  ): Either[String, Set[ProgramOptions]] = {
+//    @tailrec
+//    def aux(
+//      result: Set[ProgramOptions] = Set.empty,
+//      opts: Seq[String] = opts,
+//    ): Either[String, Set[ProgramOptions]] =
+//      opts match {
+//        case "-j" +: tl => aux(result + PrintTreeAsJson, tl)
+//        case "-t" +: tl => aux(result + PrintTree, tl)
+//        case "-v" +: tl => aux(result + Verbose, tl)
+//        case Nil =>
+//          if (result(PrintTree) && result(PrintTreeAsJson))
+//            Left("-j and -t are mutually exclusive")
+//          else Right(result)
+//        case _ => Left(usage(programName))
+//      }
+//    aux()
+//  }
 
 }
