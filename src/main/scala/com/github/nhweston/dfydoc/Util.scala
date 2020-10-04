@@ -29,4 +29,19 @@ object Util {
           .mkString("{\n", ",\n", "\n" + " " * tab + "}")
     }
 
+  def intersperse[T](xs: Seq[T], start: T, sep: T, end: T): Seq[T] = {
+    val builder = Seq.newBuilder[T]
+    val iter = xs.iterator
+    builder += start
+    if (iter.hasNext) {
+      builder += iter.next()
+      while (iter.hasNext) {
+        builder += sep
+        builder += iter.next()
+      }
+    }
+    builder += end
+    builder.result()
+  }
+
 }

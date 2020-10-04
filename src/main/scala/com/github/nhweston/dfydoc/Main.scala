@@ -1,6 +1,7 @@
 package com.github.nhweston.dfydoc
 
 import java.io.File
+import java.nio.file.Paths
 
 import com.github.nhweston.dfydoc.Options._
 import com.github.nhweston.dfydoc.node.{SrcDir, SrcFile}
@@ -21,9 +22,12 @@ object Main {
       case programName +: serverPath +: tl =>
         Options(programName, tl) match {
 
-          case Right(Generate(in, out, verbose)) =>
+          case Right(Generate(file, out, verbose)) =>
             implicit val sr = ServerRunner(serverPath, verbose)
-            SrcDir(new File(in), new File(out), "root").write()
+            val tree = sr.getTree(file)
+            val path = Paths.get(file).toRealPath().toFile.getParent
+            val root = PathResolver(path, tree).result
+            root.write(out)
 
           case Right(Print(file, content, verbose)) =>
             println(file)
@@ -31,10 +35,9 @@ object Main {
             implicit val sr = ServerRunner(serverPath, verbose)
             content match {
               case Doc =>
-                val f = new File(file)
-                val sf = SrcFile(new File(f.getParent), new File("."), f.getName)
+                val f = sr.getTree(file).head
                 println("<!DOCTYPE html>")
-                println(sf.toHtml.toString)
+                println(f.toHtml.toString)
               case DocTree =>
                 Printer(new File(file), false).print()
               case DocTreeJson =>
@@ -49,17 +52,17 @@ object Main {
         throw new MatchError(x)
     }
 
-  def runAll(
-    serverPath: String,
-    inPath: String,
-    outPath: String,
-    opts: Set[ProgramOptions]
-  ): Unit = {
-    val verbose = opts(Verbose)
-    implicit val sr = ServerRunner(serverPath, verbose)
-    SrcDir(new File(inPath), new File(outPath), "root").write()
-  }
-
+//  def runAll(
+//    serverPath: String,
+//    inPath: String,
+//    outPath: String,
+//    opts: Set[ProgramOptions]
+//  ): Unit = {
+//    val verbose = opts(Verbose)
+//    implicit val sr = ServerRunner(serverPath, verbose)
+//    SrcDir(new File(inPath), new File(outPath), "root").write()
+//  }
+//
 //  def run(
 //    serverPath: String,
 //    filePath: String,

@@ -4,6 +4,7 @@ import java.io.{BufferedOutputStream, BufferedReader, InputStreamReader}
 import java.util.Base64
 
 import com.github.nhweston.dfydoc.ServerRunner._
+import com.github.nhweston.dfydoc.node.SrcFile
 import play.api.libs.json.{JsError, JsNull, JsSuccess, JsValue, Json, Reads}
 
 import scala.annotation.tailrec
@@ -38,8 +39,8 @@ case class ServerRunner(
     read()
   }
 
-  def getTree(path: String): Seq[DocNode] =
-    Reads.seq[DocNode].reads(getJson(path)) match {
+  def getTree(path: String): Seq[SrcFile] =
+    Reads.seq[SrcFile].reads(getJson(path)) match {
       case JsSuccess(tree, _) => tree
       case e @ JsError(_) =>
         throw new Exception(Util.pprintJson(JsError.toJson(e)))

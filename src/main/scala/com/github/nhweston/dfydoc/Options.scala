@@ -18,8 +18,8 @@ object Options {
   case object DocTreeJson extends PrintContent
 
   case class Generate(
-    inDir: String,
-    outDir: String,
+    file: String,
+    out: String,
     verbose: Boolean = false,
   ) extends Options
 
@@ -94,7 +94,7 @@ object Options {
     s"""Usage:
        |
        |    Generate documentation for a project:
-       |    $programName -g in_dir out_dir [options]
+       |    $programName -g file out_dir [options]
        |        -v  verbose mode
        |
        |    Print documentation for a single file:

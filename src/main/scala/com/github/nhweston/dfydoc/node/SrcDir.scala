@@ -2,36 +2,40 @@ package com.github.nhweston.dfydoc.node
 
 import java.io.{BufferedOutputStream, File, FileOutputStream}
 
-import com.github.nhweston.dfydoc.ServerRunner
-
 import scala.xml.{Node, Text}
 
 case class SrcDir(
-  inParent: File,
-  outParent: File,
   name: String,
-)(implicit sr: ServerRunner) {
+  isRoot: Boolean,
+  sub: Map[String, SrcPath],
+) extends SrcPath {
 
-  ///////////
-  // FILES //
-  ///////////
-
-  lazy val fIn = new File(inParent.getAbsolutePath, name)
-
-  lazy val fOut = new File(outParent.getAbsolutePath, name)
-
-  lazy val sub: Seq[File] = outParent.listFiles.toSeq
-
-  lazy val (fSubdirs, fFiles) = sub.partition(_.isDirectory)
-
-  lazy val subdirs: Seq[SrcDir] =
-    fSubdirs.map(s => SrcDir(fIn, fOut, s.getName))
-
-  lazy val files: Seq[SrcFile] =
-    fFiles
-      .withFilter(f => f.getName.endsWith(".dfy"))
-      .map(f => SrcFile(fIn, fOut, f.getName))
-
+  lazy val (files, subdirs) =
+    sub.values.toSeq.foldLeft(Seq.empty[SrcFile], Seq.empty[SrcDir]) {
+      case ((fs, ds), f: SrcFile) => (fs :+ f, ds)
+      case ((fs, ds), d: SrcDir) => (fs, ds :+ d)
+    }
+//
+//  ///////////
+//  // FILES //
+//  ///////////
+//
+//  lazy val fIn = new File(inParent.getAbsolutePath, name)
+//
+//  lazy val fOut = new File(outParent.getAbsolutePath, name)
+//
+//  lazy val sub: Seq[File] = outParent.listFiles.toSeq
+//
+//  lazy val (fSubdirs, fFiles) = sub.partition(_.isDirectory)
+//
+//  lazy val subdirs: Seq[SrcDir] =
+//    fSubdirs.map(s => SrcDir(fIn, fOut, s.getName))
+//
+//  lazy val files: Seq[SrcFile] =
+//    fFiles
+//      .withFilter(f => f.getName.endsWith(".dfy"))
+//      .map(f => SrcFile(fIn, fOut, f.getName))
+//
   ///////////
   // INDEX //
   ///////////
@@ -40,7 +44,7 @@ case class SrcDir(
     subdirs match {
       case Nil => Text("")
       case subdirs =>
-        <h2>Subdirectories</h2>
+        <h2>{if (isRoot) "Directories" else "Subdirectories"}</h2>
         <ul>{
           subdirs.map { subdir =>
             <li><a href={s"${subdir.name}/index.html"}>{subdir.name}</a></li>
@@ -76,17 +80,20 @@ case class SrcDir(
   // WRITE //
   ///////////
 
-  def write(): Unit = {
+  def write(root: String): Unit = {
+    println(s"Root: $root")
+    println(s"Name: $name")
+    val fOut = if (isRoot) new File(root) else new File(root, name)
     fOut.mkdir()
-    writeIndex()
+    writeIndex(fOut.getAbsolutePath)
     for (file <- files)
-      file.write()
+      file.write(fOut.getAbsolutePath)
     for (subdir <- subdirs)
-      subdir.write()
+      subdir.write(fOut.getAbsolutePath)
   }
 
-  def writeIndex(): Unit = {
-    val f = new File(fOut.getName)
+  def writeIndex(root: String): Unit = {
+    val f = new File(root, "index.html")
     val bos = new BufferedOutputStream(new FileOutputStream(f))
     bos.write("<!DOCTYPE html>\n".getBytes)
     bos.write(index.toString.getBytes)

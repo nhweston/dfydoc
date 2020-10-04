@@ -6,7 +6,7 @@ import scala.xml.{Node, Text}
 
 case class TypeParam(
   name: String,
-  doc: String,
+  doc: Option[String],
 )
 
 object TypeParam {
