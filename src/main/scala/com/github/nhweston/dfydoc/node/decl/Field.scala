@@ -1,11 +1,13 @@
-package com.github.nhweston.dfydoc.node
+package com.github.nhweston.dfydoc.node.decl
 
+import com.github.nhweston.dfydoc.node.{Decl, Token}
 import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
 
 case class Field(
   name: String,
+  token: Token,
   typ: String,
   doc: Option[String],
 ) extends Decl {
@@ -24,6 +26,6 @@ case class Field(
 
 object Field {
 
-  implicit lazy val fmtField = Json.format[Field]
+  implicit lazy val fmt = Json.format[Field]
 
 }

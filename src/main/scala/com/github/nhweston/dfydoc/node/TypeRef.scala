@@ -2,6 +2,7 @@ package com.github.nhweston.dfydoc.node
 
 import com.github.nhweston.dfydoc.Util
 import com.github.nhweston.dfydoc.node.TypeRef._
+import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
 
@@ -10,7 +11,7 @@ case class TypeRef(
   token: Option[Token] = None,
   tparams: Seq[TypeRef] = Seq.empty,
   special: Option[SpecialTypeRefKind] = None,
-) {
+) extends DocNode {
 
   type ??? = Nothing
 
@@ -70,5 +71,8 @@ object TypeRef {
     val Tuple = Value
     val Function = Value
   }
+
+  implicit lazy val fmtSpecialTypeRefKind = Json.formatEnum(SpecialTypeRefKind)
+  implicit lazy val fmtTypeRef = Json.format[TypeRef]
 
 }

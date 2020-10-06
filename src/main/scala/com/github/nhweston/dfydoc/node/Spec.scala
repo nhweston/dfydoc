@@ -1,6 +1,5 @@
 package com.github.nhweston.dfydoc.node
 
-import com.github.nhweston.dfydoc.DocNode
 import com.github.nhweston.dfydoc.node.Spec._
 import play.api.libs.json.Json
 
@@ -10,7 +9,7 @@ case class Spec(
   kind: SpecKind,
   clause: String,
   doc: Option[String],
-) extends DocNode {
+) extends HtmlNode {
 
   override lazy val toHtml: Node = ???
 

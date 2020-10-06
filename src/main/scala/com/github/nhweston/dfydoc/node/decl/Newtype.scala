@@ -1,11 +1,13 @@
-package com.github.nhweston.dfydoc.node
+package com.github.nhweston.dfydoc.node.decl
 
+import com.github.nhweston.dfydoc.node.{Decl, Token}
 import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
 
 case class Newtype(
   name: String,
+  token: Token,
   btyp: String,
   constraint: String,
   doc: Option[String],
@@ -26,6 +28,6 @@ case class Newtype(
 
 object Newtype {
 
-  implicit lazy val fmtNewtype = Json.format[Newtype]
+  implicit lazy val fmt = Json.format[Newtype]
 
 }

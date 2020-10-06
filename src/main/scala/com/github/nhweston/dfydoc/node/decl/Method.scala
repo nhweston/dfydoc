@@ -1,13 +1,15 @@
-package com.github.nhweston.dfydoc.node
+package com.github.nhweston.dfydoc.node.decl
 
 import com.github.nhweston.dfydoc.node.Decl.Modifier
-import com.github.nhweston.dfydoc.node.Method.MethodKind
+import com.github.nhweston.dfydoc.node.decl.Method.MethodKind
+import com.github.nhweston.dfydoc.node.{Decl, Spec, Token, TypeParam, ValueParam}
 import play.api.libs.json.Json
 
 import scala.xml.Node
 
 case class Method(
   name: String,
+  token: Token,
   kind: MethodKind,
   modifiers: Seq[Modifier],
   tparams: Seq[TypeParam],
@@ -44,6 +46,6 @@ object Method {
   type MethodKind = MethodKind.Value
 
   implicit lazy val fmtMethodKind = Json.formatEnum(MethodKind)
-  implicit lazy val fmtMethod = Json.format[Method]
+  implicit lazy val fmt = Json.format[Method]
 
 }

@@ -1,13 +1,15 @@
-package com.github.nhweston.dfydoc.node
+package com.github.nhweston.dfydoc.node.decl
 
 import com.github.nhweston.dfydoc.node.Decl.Modifier
-import com.github.nhweston.dfydoc.node.Function._
+import com.github.nhweston.dfydoc.node.decl.Function.FunctionKind
+import com.github.nhweston.dfydoc.node.{Decl, Spec, Token, TypeParam, ValueParam}
 import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
 
 case class Function(
   name: String,
+  token: Token,
   kind: FunctionKind,
   modifiers: Seq[Modifier],
   tparams: Seq[TypeParam],
@@ -45,6 +47,6 @@ object Function {
   type FunctionKind = FunctionKind.Value
 
   implicit lazy val fmtFunctionKind = Json.formatEnum(FunctionKind)
-  implicit lazy val fmtFunction = Json.format[Function]
+  implicit lazy val fmt = Json.format[Function]
 
 }

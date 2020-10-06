@@ -15,27 +15,7 @@ case class SrcDir(
       case ((fs, ds), f: SrcFile) => (fs :+ f, ds)
       case ((fs, ds), d: SrcDir) => (fs, ds :+ d)
     }
-//
-//  ///////////
-//  // FILES //
-//  ///////////
-//
-//  lazy val fIn = new File(inParent.getAbsolutePath, name)
-//
-//  lazy val fOut = new File(outParent.getAbsolutePath, name)
-//
-//  lazy val sub: Seq[File] = outParent.listFiles.toSeq
-//
-//  lazy val (fSubdirs, fFiles) = sub.partition(_.isDirectory)
-//
-//  lazy val subdirs: Seq[SrcDir] =
-//    fSubdirs.map(s => SrcDir(fIn, fOut, s.getName))
-//
-//  lazy val files: Seq[SrcFile] =
-//    fFiles
-//      .withFilter(f => f.getName.endsWith(".dfy"))
-//      .map(f => SrcFile(fIn, fOut, f.getName))
-//
+
   ///////////
   // INDEX //
   ///////////

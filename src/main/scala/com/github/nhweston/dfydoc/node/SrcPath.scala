@@ -1,6 +1,6 @@
 package com.github.nhweston.dfydoc.node
 
-trait SrcPath {
+trait SrcPath extends DocNode {
 
   def create(
     file: SrcFile,

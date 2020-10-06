@@ -1,12 +1,14 @@
-package com.github.nhweston.dfydoc.node
+package com.github.nhweston.dfydoc.node.decl
 
-import com.github.nhweston.dfydoc.node.Datatype.Ctor
+import com.github.nhweston.dfydoc.node.decl.Datatype.Ctor
+import com.github.nhweston.dfydoc.node.{Decl, Resolvable, Token, TypeParam, ValueParam}
 import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
 
 case class Datatype(
   name: String,
+  token: Token,
   isCodata: Boolean,
   tparams: Seq[TypeParam],
   ctors: Seq[Ctor],
@@ -17,6 +19,9 @@ case class Datatype(
   val _name = <b>{name}</b>
   val _tparams = TypeParam.toHtml(tparams)
   val _ctors = ctors.map(ctor => <li>{ctor.toHtml}</li>)
+
+  // TODO: Include type parameters and constructors
+  override lazy val children: Seq[Resolvable] = Seq.empty
 
   override lazy val toHtml: Node =
     <div class="member">
@@ -41,6 +46,6 @@ object Datatype {
   }
 
   implicit lazy val fmtCtor = Json.format[Ctor]
-  implicit lazy val fmtDatatype = Json.format[Datatype]
+  implicit lazy val fmt = Json.format[Datatype]
 
 }

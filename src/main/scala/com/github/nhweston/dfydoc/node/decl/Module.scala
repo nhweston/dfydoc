@@ -1,6 +1,6 @@
-package com.github.nhweston.dfydoc.node
+package com.github.nhweston.dfydoc.node.decl
 
-import com.github.nhweston.dfydoc.DocNode
+import com.github.nhweston.dfydoc.node.{Decl, Resolvable, Token}
 import com.github.nhweston.dfydoc.node.Decl.Modifier
 import play.api.libs.json.Json
 
@@ -8,9 +8,10 @@ import scala.xml.{Node, Text}
 
 case class Module(
   name: String,
+  token: Token,
   modifiers: Seq[Modifier],
   refines: Option[String],
-  decls: Seq[DocNode],
+  decls: Seq[Decl],
   doc: Option[String],
 ) extends Decl {
 
@@ -21,6 +22,8 @@ case class Module(
       case Some(refines) => <br/> ++ Text("refines " + refines)
       case None => Text("")
     }
+
+  override lazy val children: Seq[Resolvable] = decls
 
   override lazy val toHtml: Node =
     <div class="sub">
@@ -33,6 +36,6 @@ case class Module(
 
 object Module {
 
-  implicit lazy val fmtModule = Json.format[Module]
+  implicit lazy val fmt = Json.format[Module]
 
 }

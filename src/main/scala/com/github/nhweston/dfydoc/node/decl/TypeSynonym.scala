@@ -1,11 +1,13 @@
-package com.github.nhweston.dfydoc.node
+package com.github.nhweston.dfydoc.node.decl
 
+import com.github.nhweston.dfydoc.node.{Decl, Token, TypeParam}
 import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
 
 case class TypeSynonym(
   name: String,
+  token: Token,
   tparams: Seq[TypeParam],
   rhs: Option[String],
   doc: Option[String],
@@ -30,6 +32,6 @@ case class TypeSynonym(
 
 object TypeSynonym {
 
-  implicit lazy val fmtTypeSynonym = Json.format[TypeSynonym]
+  implicit lazy val fmt = Json.format[TypeSynonym]
 
 }

@@ -8,7 +8,7 @@ case class ValueParam(
   name: Option[String],
   typ: String,
   doc: Option[String],
-) {
+) extends DocNode {
 
   lazy val toHtml: Node =
     name match {

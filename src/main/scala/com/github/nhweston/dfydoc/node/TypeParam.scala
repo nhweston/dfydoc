@@ -6,8 +6,9 @@ import scala.xml.{Node, Text}
 
 case class TypeParam(
   name: String,
+  token: Token,
   doc: Option[String],
-)
+) extends DocNode
 
 object TypeParam {
 

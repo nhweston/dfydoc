@@ -4,7 +4,6 @@ import java.io.File
 import java.nio.file.Paths
 
 import com.github.nhweston.dfydoc.Options._
-import com.github.nhweston.dfydoc.node.{SrcDir, SrcFile}
 
 object Main {
 
@@ -14,8 +13,6 @@ object Main {
     val PrintTree = Value
     val Verbose = Value
   }
-
-  import ProgramOptions._
 
   def main(args: Array[String]): Unit =
     args.toSeq match {
@@ -37,7 +34,7 @@ object Main {
               case Doc =>
                 val f = sr.getTree(file).head
                 println("<!DOCTYPE html>")
-                println(f.toHtml.toString)
+                println(f.html.toString)
               case DocTree =>
                 Printer(new File(file), false).print()
               case DocTreeJson =>
