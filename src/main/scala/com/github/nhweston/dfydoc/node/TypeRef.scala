@@ -1,6 +1,6 @@
 package com.github.nhweston.dfydoc.node
 
-import com.github.nhweston.dfydoc.Util
+import com.github.nhweston.dfydoc.{Resolver, Util}
 import com.github.nhweston.dfydoc.node.TypeRef._
 import play.api.libs.json.Json
 
@@ -13,9 +13,7 @@ case class TypeRef(
   special: Option[SpecialTypeRefKind] = None,
 ) extends DocNode {
 
-  type ??? = Nothing
-
-  def toHtml(implicit resolver: ???): Node =
+  def toHtml(implicit resolver: Resolver): Node =
     special match {
 
       case Some(SpecialTypeRefKind.Tuple) =>
@@ -50,14 +48,18 @@ case class TypeRef(
             case None => Text(name)
           }
         val _tparams =
-          <span>{
-            Util.intersperse(
-              tparams.map(_.toHtml),
-              Text("<"),
-              Text(", "),
-              Text(">"),
-            )
-          }</span>;
+          tparams match {
+            case Nil => Text("")
+            case tparams =>
+              <span>{
+                Util.intersperse(
+                  tparams.map(_.toHtml),
+                  Text("<"),
+                  Text(", "),
+                  Text(">"),
+                )
+                }</span>
+          }
         <span>{_name}{_tparams}</span>
     }
 

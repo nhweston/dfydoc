@@ -1,5 +1,6 @@
 package com.github.nhweston.dfydoc.node
 
+import com.github.nhweston.dfydoc.Resolver
 import com.github.nhweston.dfydoc.node.HtmlNode.transf
 import laika.api.Transformer
 import laika.format.{HTML, Markdown}
@@ -13,14 +14,14 @@ trait HtmlNode extends DocNode {
   lazy val _doc: Node =
     doc.map(transf.transform) match {
       case Some(Right(result)) =>
-        <div>{XML.loadString(result)}</div>
+        XML.loadString("<div>" + result + "</div>")
       case Some(Left(e)) =>
         <div><b>Malformed markdown</b>: {Text(e.message)}</div>
       case None =>
         Text("")
     }
 
-  def toHtml: Node
+  def toHtml(implicit ctx: Resolver): Node
 
 }
 

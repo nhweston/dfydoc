@@ -24,6 +24,7 @@ object Main {
             val tree = sr.getTree(file)
             val path = Paths.get(file).toRealPath().toFile.getParent
             val root = PathResolver(path, tree).result
+            implicit val ctx = Resolver(root)
             root.write(out)
 
           case Right(Print(file, content, verbose)) =>
@@ -33,6 +34,7 @@ object Main {
             content match {
               case Doc =>
                 val f = sr.getTree(file).head
+                implicit val ctx = Resolver(f)
                 println("<!DOCTYPE html>")
                 println(f.html.toString)
               case DocTree =>
@@ -48,62 +50,5 @@ object Main {
       case x =>
         throw new MatchError(x)
     }
-
-//  def runAll(
-//    serverPath: String,
-//    inPath: String,
-//    outPath: String,
-//    opts: Set[ProgramOptions]
-//  ): Unit = {
-//    val verbose = opts(Verbose)
-//    implicit val sr = ServerRunner(serverPath, verbose)
-//    SrcDir(new File(inPath), new File(outPath), "root").write()
-//  }
-//
-//  def run(
-//    serverPath: String,
-//    filePath: String,
-//    opts: Set[ProgramOptions],
-//  ): Unit = {
-//    val verbose = opts(Verbose)
-//    val json = ServerRunner(serverPath, filePath, verbose)
-//    if (opts(PrintTreeAsJson))
-//      println(pprintJson(json))
-//    else Reads.seq[DocNode].reads(json) match {
-//      case JsSuccess(symbols, _) =>
-//        if (opts(PrintTree))
-//          pprint.pprintln(symbols)
-//        else {
-//          val fileName = filePath.split('/').last.split('.').head
-//          val file = SrcFile(fileName, symbols)
-//          println("<!DOCTYPE html>")
-//          println(file.toHtml.toString)
-//        }
-//      case e @ JsError(_) =>
-//        println(pprintJson(JsError.toJson(e)))
-//    }
-//  }
-//
-//  def parseOptions(
-//    programName: String,
-//    opts: Seq[String]
-//  ): Either[String, Set[ProgramOptions]] = {
-//    @tailrec
-//    def aux(
-//      result: Set[ProgramOptions] = Set.empty,
-//      opts: Seq[String] = opts,
-//    ): Either[String, Set[ProgramOptions]] =
-//      opts match {
-//        case "-j" +: tl => aux(result + PrintTreeAsJson, tl)
-//        case "-t" +: tl => aux(result + PrintTree, tl)
-//        case "-v" +: tl => aux(result + Verbose, tl)
-//        case Nil =>
-//          if (result(PrintTree) && result(PrintTreeAsJson))
-//            Left("-j and -t are mutually exclusive")
-//          else Right(result)
-//        case _ => Left(usage(programName))
-//      }
-//    aux()
-//  }
 
 }

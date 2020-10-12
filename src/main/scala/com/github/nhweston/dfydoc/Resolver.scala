@@ -3,7 +3,7 @@ package com.github.nhweston.dfydoc
 import com.github.nhweston.dfydoc.Resolver._
 import com.github.nhweston.dfydoc.node._
 
-case class Resolver(root: SrcDir) {
+case class Resolver(root: SrcPath) {
 
   lazy val (tokensToPaths, tokensToNodes): (TokensToPaths, TokensToNodes) = {
     type Result = (TokensToPaths, TokensToNodes)

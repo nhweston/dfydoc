@@ -1,5 +1,6 @@
 package com.github.nhweston.dfydoc.node.decl
 
+import com.github.nhweston.dfydoc.Resolver
 import com.github.nhweston.dfydoc.node.{Decl, Token}
 import play.api.libs.json.Json
 
@@ -16,7 +17,7 @@ case class Field(
   lazy val _name = <b>{name}</b>
   lazy val _typ = Text(typ)
 
-  override lazy val toHtml: Node =
+  override def toHtml(implicit ctx: Resolver): Node =
     <div>
       <p>{_kwd} {_name}: {_typ}</p>
       {_doc}

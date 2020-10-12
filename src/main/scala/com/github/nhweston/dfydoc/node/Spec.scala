@@ -1,5 +1,6 @@
 package com.github.nhweston.dfydoc.node
 
+import com.github.nhweston.dfydoc.Resolver
 import com.github.nhweston.dfydoc.node.Spec._
 import play.api.libs.json.Json
 
@@ -11,7 +12,7 @@ case class Spec(
   doc: Option[String],
 ) extends HtmlNode {
 
-  override lazy val toHtml: Node = ???
+  override def toHtml(implicit ctx: Resolver): Node = ???
 
 }
 

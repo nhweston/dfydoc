@@ -2,6 +2,8 @@ package com.github.nhweston.dfydoc.node
 
 import java.io.{BufferedOutputStream, File, FileOutputStream}
 
+import com.github.nhweston.dfydoc.Resolver
+
 import scala.xml.{Node, Text}
 
 case class SrcDir(
@@ -60,7 +62,7 @@ case class SrcDir(
   // WRITE //
   ///////////
 
-  def write(root: String): Unit = {
+  def write(root: String)(implicit ctx: Resolver): Unit = {
     println(s"Root: $root")
     println(s"Name: $name")
     val fOut = if (isRoot) new File(root) else new File(root, name)

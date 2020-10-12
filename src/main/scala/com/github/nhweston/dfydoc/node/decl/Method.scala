@@ -1,11 +1,12 @@
 package com.github.nhweston.dfydoc.node.decl
 
+import com.github.nhweston.dfydoc.Resolver
 import com.github.nhweston.dfydoc.node.Decl.Modifier
 import com.github.nhweston.dfydoc.node.decl.Method.MethodKind
-import com.github.nhweston.dfydoc.node.{Decl, Spec, Token, TypeParam, ValueParam}
+import com.github.nhweston.dfydoc.node._
 import play.api.libs.json.Json
 
-import scala.xml.Node
+import scala.xml.{Node, Text}
 
 case class Method(
   name: String,
@@ -19,17 +20,21 @@ case class Method(
   doc: Option[String],
 ) extends Decl {
 
-  lazy val _kws = (modifiers :+ kind).mkString(" ")
-  lazy val _name = <b>{name}</b>
-  lazy val _tparams = TypeParam.toHtml(tparams)
-  lazy val _vparams = ValueParam.toHtml(vparams)
-  lazy val _ret = ValueParam.toHtml(returns)
-
-  override lazy val toHtml: Node =
+  override def toHtml(implicit ctx: Resolver): Node = {
+    val _kws = (modifiers :+ kind).mkString(" ")
+    val _name = <b>{name}</b>
+    val _tparams = TypeParam.toHtml(tparams)
+    val _vparams = ValueParam.toHtml(vparams)
+    val _ret =
+      returns match {
+        case Nil => Text("")
+        case returns => <span>returns {ValueParam.toHtml(returns)}</span>
+      }
     <div>
-      <p>{_kws} {_name}{_tparams}{_vparams}<br/>returns {_ret}</p>
+      <p>{_kws} {_name}{_tparams}{_vparams}<br/>{_ret}</p>
       {_doc}
     </div>
+  }
 
 }
 

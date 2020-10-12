@@ -21,9 +21,3 @@ case class PathResolver(
     }
 
 }
-
-object PathResolver {
-
-
-
-}

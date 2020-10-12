@@ -1,5 +1,6 @@
 package com.github.nhweston.dfydoc.node.decl
 
+import com.github.nhweston.dfydoc.Resolver
 import com.github.nhweston.dfydoc.node.{Decl, Resolvable, Token, TypeParam}
 import play.api.libs.json.Json
 
@@ -27,7 +28,7 @@ case class Class(
   // TODO: Include type parameters
   override lazy val children: Seq[Resolvable] = members
 
-  override lazy val toHtml: Node =
+  override def toHtml(implicit ctx: Resolver): Node =
     <div class="sub">
       <p>{_kws} {_name}{_tparams}{_xtnds}</p>
       {_doc}

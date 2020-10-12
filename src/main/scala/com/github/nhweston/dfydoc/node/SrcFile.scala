@@ -2,6 +2,7 @@ package com.github.nhweston.dfydoc.node
 
 import java.io.{BufferedOutputStream, File, FileOutputStream}
 
+import com.github.nhweston.dfydoc.Resolver
 import play.api.libs.json.Json
 
 import scala.xml.Node
@@ -13,7 +14,7 @@ case class SrcFile(
 
   lazy val name = path.split('/').last
 
-  def write(root: String): Unit = {
+  def write(root: String)(implicit ctx: Resolver): Unit = {
     val f = new File(root, s"$name.html")
     val bos = new BufferedOutputStream(new FileOutputStream(f))
     bos.write("<!DOCTYPE html>".getBytes)
@@ -21,7 +22,7 @@ case class SrcFile(
     bos.close()
   }
 
-  lazy val html: Node =
+  def html(implicit ctx: Resolver): Node =
     <html>
       <head>
         <title>{name}</title>

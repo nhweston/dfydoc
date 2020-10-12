@@ -1,5 +1,6 @@
 package com.github.nhweston.dfydoc.node
 
+import com.github.nhweston.dfydoc.Util
 import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
@@ -8,14 +9,28 @@ case class TypeParam(
   name: String,
   token: Token,
   doc: Option[String],
-) extends DocNode
+) extends DocNode {
+
+  lazy val toHtml: Node =
+    Text(name)
+
+}
 
 object TypeParam {
 
   def toHtml(tps: Seq[TypeParam]): Node =
     tps match {
-      case Nil => Text("")
-      case tps => Text(tps.mkString("<", ", ", ">"))
+      case Nil =>
+        Text("")
+      case tps =>
+        <span>{
+          Util.intersperse(
+            tps.map(_.toHtml),
+            Text("<"),
+            Text(", "),
+            Text(">"),
+          )
+        }</span>
     }
 
   implicit lazy val fmtTypeParam = Json.format[TypeParam]
