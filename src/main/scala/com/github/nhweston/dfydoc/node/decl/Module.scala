@@ -27,6 +27,7 @@ case class Module(
         case None => Text("")
       }
     <div class="sub">
+      <a name={aname}/>
       <p>{_kws} {_name}{_ref}</p>
       {_doc}
       {decls.map(_.toHtml)}

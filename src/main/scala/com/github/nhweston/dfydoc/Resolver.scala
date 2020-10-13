@@ -3,6 +3,8 @@ package com.github.nhweston.dfydoc
 import com.github.nhweston.dfydoc.Resolver._
 import com.github.nhweston.dfydoc.node._
 
+import scala.annotation.tailrec
+
 case class Resolver(root: SrcPath) {
 
   lazy val (tokensToPaths, tokensToNodes): (TokensToPaths, TokensToNodes) = {
@@ -32,6 +34,37 @@ case class Resolver(root: SrcPath) {
     aux0(root, DeclPath())
     (bttp.result(), bttn.result())
   }
+
+  def getRelativePath(target: Resolvable, root: Resolvable): String =
+    getRelativePath(target.token, root.token)
+
+  def getRelativePath(target: Token, root: Token): String =
+    (tokensToPaths.get(target), tokensToPaths.get(root)) match {
+      case (Some(tp), Some(rp)) =>
+        val tDirs :+ _ = tp.file
+        val rDirs :+ rName = rp.file
+        @tailrec
+        def aux(
+          tDirs: Seq[String] = tDirs,
+          rDirs: Seq[String] = rDirs,
+        ): Seq[String] =
+          (tDirs, rDirs) match {
+            case (thd +: ttl, rhd +: rtl) if (thd == rhd) =>
+              // pop common ancestor
+              aux(ttl, rtl)
+            case _ =>
+              // move up to inner-most common ancestor and append remaining path
+              rDirs.map(_ => "..") ++ tDirs
+          }
+        aux().mkString("/") + rName + ".html#" + tp.anchor.mkString("~")
+      case _ => ""
+    }
+
+  def getAnchorName(token: Token): String =
+    tokensToPaths.get(token) match {
+      case Some(path) => path.anchor.mkString("~")
+      case None => ""
+    }
 
 }
 

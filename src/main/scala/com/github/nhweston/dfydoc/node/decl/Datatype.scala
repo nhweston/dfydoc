@@ -23,8 +23,9 @@ case class Datatype(
     val _kws = Text(if (isCodata) "codatatype" else "datatype")
     val _name = <b>{name}</b>
     val _tparams = TypeParam.toHtml(tparams)
-    val _ctors = ctors.map(ctor => <li>{ctor.toHtml}</li>)
+    val _ctors = ctors.map(ctor => <li>{ctor.toHtml(this)}</li>)
     <div class="member">
+      <a name={aname}/>
       <p>{_kws} {_name}{_tparams}</p>
       {_doc}
       <ul>{_ctors}</ul>
@@ -37,12 +38,12 @@ object Datatype {
 
   case class Ctor(
     name: String,
-    vparams: Option[Seq[ValueParam]]
+    vparams: Option[Seq[ValueParam]],
   ) {
-    def toHtml(implicit ctx: Resolver): Node =
+    def toHtml(parent: Datatype)(implicit ctx: Resolver): Node =
       vparams match {
         case None => Text(name)
-        case Some(vparams) => Text(name + ValueParam.toHtml(vparams))
+        case Some(vparams) => Text(name + ValueParam.toHtml(vparams, parent))
       }
   }
 

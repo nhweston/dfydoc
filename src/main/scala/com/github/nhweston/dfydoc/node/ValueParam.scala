@@ -11,24 +11,27 @@ case class ValueParam(
   doc: Option[String],
 ) extends DocNode {
 
-  def toHtml(implicit ctx: Resolver): Node =
+  def toHtml(parent: Resolvable)(implicit ctx: Resolver): Node =
     name match {
-      case Some(name) => <span>{name}: {typ.toHtml}</span>
-      case None => typ.toHtml
+      case Some(name) => <span>{name}: {typ.toHtml(parent)}</span>
+      case None => typ.toHtml(parent)
     }
 
 }
 
 object ValueParam {
 
-  def toHtml(vps: Seq[ValueParam])(implicit ctx: Resolver): Node =
+  def toHtml(
+    vps: Seq[ValueParam],
+    parent: Resolvable,
+  )(implicit ctx: Resolver): Node =
     vps match {
       case Nil =>
         Text("()")
       case vps =>
         <span>{
           Util.intersperse(
-            vps.map(_.toHtml),
+            vps.map(_.toHtml(parent)),
             Text("("),
             Text(", "),
             Text(")"),

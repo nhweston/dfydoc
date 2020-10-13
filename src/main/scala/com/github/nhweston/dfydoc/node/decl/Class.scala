@@ -30,7 +30,7 @@ case class Class(
 
   override def toHtml(implicit ctx: Resolver): Node =
     <div class="sub">
-      <p>{_kws} {_name}{_tparams}{_xtnds}</p>
+      <a name={aname}/><p>{_kws} {_name}{_tparams}{_xtnds}</p>
       {_doc}
       {members.map(_.toHtml)}
     </div>

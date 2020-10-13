@@ -19,6 +19,7 @@ case class Field(
 
   override def toHtml(implicit ctx: Resolver): Node =
     <div>
+      <a name={aname}/>
       <p>{_kwd} {_name}: {_typ}</p>
       {_doc}
     </div>

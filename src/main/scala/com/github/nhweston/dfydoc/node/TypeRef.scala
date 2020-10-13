@@ -1,7 +1,7 @@
 package com.github.nhweston.dfydoc.node
 
-import com.github.nhweston.dfydoc.{Resolver, Util}
 import com.github.nhweston.dfydoc.node.TypeRef._
+import com.github.nhweston.dfydoc.{Resolver, Util}
 import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
@@ -13,13 +13,13 @@ case class TypeRef(
   special: Option[SpecialTypeRefKind] = None,
 ) extends DocNode {
 
-  def toHtml(implicit resolver: Resolver): Node =
+  def toHtml(parent: Resolvable)(implicit ctx: Resolver): Node =
     special match {
 
       case Some(SpecialTypeRefKind.Tuple) =>
         <span>{
           Util.intersperse(
-            tparams.map(_.toHtml),
+            tparams.map(_.toHtml(parent)),
             Text("("),
             Text(", "),
             Text(")"),
@@ -29,23 +29,26 @@ case class TypeRef(
       case Some(SpecialTypeRefKind.Function) =>
         tparams match {
           case in +: out +: Nil =>
-            <span>{in.toHtml} → {out.toHtml}</span>
+            <span>{in.toHtml(parent)} → {out.toHtml(parent)}</span>
           case in :+ out =>
             <span>{
               Util.intersperse(
-                in.map(_.toHtml),
+                in.map(_.toHtml(parent)),
                 Text("("),
                 Text(", "),
                 Text(")"),
               )
-            } → {out.toHtml}</span>
+            } → {out.toHtml(parent)}</span>
         }
 
       case None =>
         val _name =
           token match {
-            case Some(_) => <a href="https://www.google.com/">{name}</a>
-            case None => Text(name)
+            case Some(target) =>
+              val rel = ctx.getRelativePath(target, parent.token)
+              <a href={rel}>{name}</a>
+            case None =>
+              Text(name)
           }
         val _tparams =
           tparams match {
@@ -53,7 +56,7 @@ case class TypeRef(
             case tparams =>
               <span>{
                 Util.intersperse(
-                  tparams.map(_.toHtml),
+                  tparams.map(_.toHtml(parent)),
                   Text("<"),
                   Text(", "),
                   Text(">"),

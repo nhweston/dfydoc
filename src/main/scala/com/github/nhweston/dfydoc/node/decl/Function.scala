@@ -24,9 +24,10 @@ case class Function(
     val _kws = (modifiers :+ kind).mkString(" ")
     val _name = <b>{name}</b>
     val _tparams = TypeParam.toHtml(tparams)
-    val _vparams = ValueParam.toHtml(vparams)
+    val _vparams = ValueParam.toHtml(vparams, this)
     val _rtyp = Text(rtyp)
     <div class="member">
+      <a name={aname}/>
       {_doc}
       <p>{_kws} {_name}{_tparams}{_vparams}: {_rtyp}</p>
     </div>

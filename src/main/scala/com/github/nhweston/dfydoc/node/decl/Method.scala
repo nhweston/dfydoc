@@ -24,13 +24,14 @@ case class Method(
     val _kws = (modifiers :+ kind).mkString(" ")
     val _name = <b>{name}</b>
     val _tparams = TypeParam.toHtml(tparams)
-    val _vparams = ValueParam.toHtml(vparams)
+    val _vparams = ValueParam.toHtml(vparams, this)
     val _ret =
       returns match {
         case Nil => Text("")
-        case returns => <span>returns {ValueParam.toHtml(returns)}</span>
+        case returns => <span>returns {ValueParam.toHtml(returns, this)}</span>
       }
     <div>
+      <a name={aname}/>
       <p>{_kws} {_name}{_tparams}{_vparams}<br/>{_ret}</p>
       {_doc}
     </div>
