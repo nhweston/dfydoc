@@ -28,7 +28,7 @@ case class Function(
     val _rtyp = Text(rtyp)
     <div class="member">
       <a name={aname}/>
-      {_doc}
+      {_doc(this)}
       <p>{_kws} {_name}{_tparams}{_vparams}: {_rtyp}</p>
     </div>
   }

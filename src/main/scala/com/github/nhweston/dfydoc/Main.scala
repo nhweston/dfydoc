@@ -23,9 +23,8 @@ object Main {
             implicit val sr = ServerRunner(serverPath, verbose)
             val tree = sr.getTree(file)
             val path = Paths.get(file).toRealPath().toFile.getParent
-            val root = PathResolver(path, tree).result
-            implicit val ctx = Resolver(root)
-            root.write(out)
+            implicit val ctx = Resolver(path, tree)
+            ctx.root.write(out)
 
           case Right(Print(file, content, verbose)) =>
             println(file)
@@ -34,8 +33,9 @@ object Main {
             content match {
               case Doc =>
                 val f = sr.getTree(file).head
-                implicit val ctx = Resolver(f)
+                implicit val ctx = Resolver("", Seq(f))
                 println("<!DOCTYPE html>")
+                println("<head><link rel=\"stylesheet\" href=\"styles.css\"></head>")
                 println(f.html.toString)
               case DocTree =>
                 Printer(new File(file), false).print()

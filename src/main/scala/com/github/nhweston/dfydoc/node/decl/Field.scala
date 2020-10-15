@@ -21,7 +21,7 @@ case class Field(
     <div>
       <a name={aname}/>
       <p>{_kwd} {_name}: {_typ}</p>
-      {_doc}
+      {_doc(this)}
     </div>
 
 }

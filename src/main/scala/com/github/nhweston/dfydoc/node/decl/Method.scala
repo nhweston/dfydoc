@@ -33,7 +33,7 @@ case class Method(
     <div>
       <a name={aname}/>
       <p>{_kws} {_name}{_tparams}{_vparams}<br/>{_ret}</p>
-      {_doc}
+      {_doc(this)}
     </div>
   }
 

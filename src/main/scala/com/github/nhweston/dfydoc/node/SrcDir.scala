@@ -78,6 +78,7 @@ case class SrcDir(
     val f = new File(root, "index.html")
     val bos = new BufferedOutputStream(new FileOutputStream(f))
     bos.write("<!DOCTYPE html>\n".getBytes)
+    bos.write("<head><link rel=\"stylesheet\" href=\"styles.css\"></head>\n".getBytes)
     bos.write(index.toString.getBytes)
     bos.close()
   }

@@ -26,7 +26,7 @@ case class TypeSynonym(
     <div class="member">
       <a name={aname}/>
       <p>{_kws} {_name}{_tparams}{_rhs}</p>
-      {_doc}
+      {_doc(this)}
     </div>
   }
 

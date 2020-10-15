@@ -29,7 +29,7 @@ case class Module(
     <div class="sub">
       <a name={aname}/>
       <p>{_kws} {_name}{_ref}</p>
-      {_doc}
+      {_doc(this)}
       {decls.map(_.toHtml)}
     </div>
   }

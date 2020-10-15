@@ -46,6 +46,7 @@ case class TypeRef(
           token match {
             case Some(target) =>
               val rel = ctx.getRelativePath(target, parent.token)
+              println(rel)
               <a href={rel}>{name}</a>
             case None =>
               Text(name)

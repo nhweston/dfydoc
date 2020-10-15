@@ -27,7 +27,7 @@ case class Datatype(
     <div class="member">
       <a name={aname}/>
       <p>{_kws} {_name}{_tparams}</p>
-      {_doc}
+      {_doc(this)}
       <ul>{_ctors}</ul>
     </div>
   }

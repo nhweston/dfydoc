@@ -22,7 +22,7 @@ case class Newtype(
     <div class="member">
       <a name={aname}/>
       <p>{_kws} {_name} = {_btyp} | {_constr}</p>
-      {_doc}
+      {_doc(this)}
     </div>
   }
 

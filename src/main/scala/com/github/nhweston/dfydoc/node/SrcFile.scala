@@ -10,7 +10,8 @@ import scala.xml.Node
 case class SrcFile(
   path: String,
   decls: Seq[Decl],
-) extends SrcPath {
+  includes: Seq[String],
+) extends SrcPath with Resolvable {
 
   lazy val name = path.split('/').last
 
@@ -18,6 +19,7 @@ case class SrcFile(
     val f = new File(root, s"$name.html")
     val bos = new BufferedOutputStream(new FileOutputStream(f))
     bos.write("<!DOCTYPE html>".getBytes)
+    bos.write("<head><link rel=\"stylesheet\" href=\"styles.css\"></head>\n".getBytes)
     bos.write(html.toString.getBytes)
     bos.close()
   }
@@ -26,12 +28,20 @@ case class SrcFile(
     <html>
       <head>
         <title>{name}</title>
+        <head><link rel="stylesheet" href="styles.css"/></head>
       </head>
       <body>
-        <h1>{name}</h1>
-        {decls.map(_.toHtml)}
+        <div id="content">
+          <h1>{name}</h1>
+          {decls.map(_.toHtml)}
+        </div>
       </body>
     </html>
+
+  override lazy val token: Token =
+    Token(path, -1, -1)
+
+  override def children: Seq[Resolvable] = decls
 
 }
 
