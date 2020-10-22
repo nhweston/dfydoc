@@ -17,7 +17,7 @@ case class Function(
   vparams: Seq[ValueParam],
   rtyp: String,
   spec: Seq[Spec],
-  doc: Option[String],
+  override val doc: Option[String],
 ) extends Decl {
 
   override def toHtml(implicit ctx: Resolver): Node = {
@@ -27,8 +27,8 @@ case class Function(
     val _vparams = ValueParam.toHtml(vparams, this)
     val _rtyp = Text(rtyp)
     <div class="member">
-      <a name={aname}/>
-      {_doc(this)}
+      <a name={path.getAnchorUrl}/>
+      {docHtml}
       <p>{_kws} {_name}{_tparams}{_vparams}: {_rtyp}</p>
     </div>
   }

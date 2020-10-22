@@ -8,18 +8,20 @@ import scala.xml.{Node, Text}
 
 case class TypeRef(
   name: String,
-  token: Option[Token] = None,
+  target: Option[Token] = None,
   tparams: Seq[TypeRef] = Seq.empty,
   special: Option[SpecialTypeRefKind] = None,
-) extends DocNode {
+) extends Decl {
 
-  def toHtml(parent: Resolvable)(implicit ctx: Resolver): Node =
+  override def token: Token = Token("", -1, -1)
+
+  def toHtml(implicit ctx: Resolver): Node =
     special match {
 
       case Some(SpecialTypeRefKind.Tuple) =>
         <span>{
           Util.intersperse(
-            tparams.map(_.toHtml(parent)),
+            tparams.map(_.toHtml),
             Text("("),
             Text(", "),
             Text(")"),
@@ -29,25 +31,25 @@ case class TypeRef(
       case Some(SpecialTypeRefKind.Function) =>
         tparams match {
           case in +: out +: Nil =>
-            <span>{in.toHtml(parent)} → {out.toHtml(parent)}</span>
+            <span>{in.toHtml} → {out.toHtml}</span>
           case in :+ out =>
             <span>{
               Util.intersperse(
-                in.map(_.toHtml(parent)),
+                in.map(_.toHtml),
                 Text("("),
                 Text(", "),
                 Text(")"),
               )
-            } → {out.toHtml(parent)}</span>
+            } → {out.toHtml}</span>
         }
 
       case None =>
         val _name =
-          token match {
+          target match {
             case Some(target) =>
-              val rel = ctx.getRelativePath(target, parent.token)
+              val rel = target.decl.pathRelativeTo(this)
               println(rel)
-              <a href={rel}>{name}</a>
+              <a href={rel.toUrl}>{name}</a>
             case None =>
               Text(name)
           }
@@ -57,7 +59,7 @@ case class TypeRef(
             case tparams =>
               <span>{
                 Util.intersperse(
-                  tparams.map(_.toHtml(parent)),
+                  tparams.map(_.toHtml),
                   Text("<"),
                   Text(", "),
                   Text(">"),

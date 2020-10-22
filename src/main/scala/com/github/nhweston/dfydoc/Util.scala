@@ -1,10 +1,11 @@
 package com.github.nhweston.dfydoc
 
+import laika.api.Transformer
+import laika.format.{HTML, Markdown}
 import play.api.libs.json._
 
 object Util {
 
-  // The Play JSON pretty printer is awful.
   def pprintJson(json: JsValue, tab: Int = 0): String =
     json match {
       case JsNull => "null"
@@ -43,5 +44,7 @@ object Util {
     builder += end
     builder.result()
   }
+
+  val md2html = Transformer.from(Markdown).to(HTML).build.transform(_: String)
 
 }

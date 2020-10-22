@@ -11,7 +11,7 @@ case class TypeSynonym(
   token: Token,
   tparams: Seq[TypeParam],
   rhs: Option[String],
-  doc: Option[String],
+  override val doc: Option[String],
 ) extends Decl {
 
   override def toHtml(implicit ctx: Resolver): Node = {
@@ -24,9 +24,9 @@ case class TypeSynonym(
         case Some(rhs) => Text(" = " + rhs)
       }
     <div class="member">
-      <a name={aname}/>
+      <a name={path.getAnchorUrl}/>
       <p>{_kws} {_name}{_tparams}{_rhs}</p>
-      {_doc(this)}
+      {docHtml}
     </div>
   }
 

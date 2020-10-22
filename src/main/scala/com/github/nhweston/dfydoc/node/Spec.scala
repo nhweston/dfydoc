@@ -9,8 +9,12 @@ import scala.xml.Node
 case class Spec(
   kind: SpecKind,
   clause: String,
-  doc: Option[String],
-) extends HtmlNode {
+  override val doc: Option[String],
+) extends Decl {
+
+  override def name: String = ""
+
+  override def token: Token = Token("", -1, -1)
 
   override def toHtml(implicit ctx: Resolver): Node = ???
 

@@ -1,9 +1,85 @@
 package com.github.nhweston.dfydoc.node
 
+import com.github.nhweston.dfydoc.Resolver
+import com.github.nhweston.dfydoc.Resolver.DeclPath
+import com.github.nhweston.dfydoc.Util._
 import com.github.nhweston.dfydoc.node.decl._
 import play.api.libs.json._
 
-trait Decl extends HtmlNode with Resolvable
+import scala.xml._
+import scala.xml.transform.{RewriteRule, RuleTransformer}
+
+trait Decl {
+
+  /** The name of this declaration to be used in anchor paths. */
+  def name: String
+
+  /** User-written documentation, if any. */
+  def doc: Option[String] = None
+
+  /** All declarations contained within this nodes. */
+  def children: Seq[Decl] = Seq.empty
+
+  /** Uniquely identifies this node and specifies its containing file. */
+  def token: Token
+
+  /** The absolute node to this entity. */
+  def path(implicit ctx: Resolver): DeclPath =
+    ctx.tokensToPaths(token)
+
+  def rootFile(implicit ctx: Resolver): SrcFile =
+    ctx.files.find(_.path == token.file).get
+
+  def anchor(implicit ctx: Resolver): Seq[String] =
+    ctx.tokensToPaths(token).anchor
+
+  def parent(implicit ctx: Resolver): Option[Decl] =
+    ctx.parent(token)
+
+  /** The path to this node relative to `root`. */
+  def pathRelativeTo(root: Decl)(implicit ctx: Resolver): DeclPath =
+    this.path.relativise(root.path)
+
+  /** User-written documentation rendered as HTML. */
+  def docHtml(implicit ctx: Resolver): Node =
+    doc.map(md2html) match {
+      case Some(Right(result)) =>
+        val raw = XML.loadString(s"<div>$result</div>")
+        val rewriter = new RewriteRule {
+          override def transform(n: Node): Seq[Node] =
+            n match {
+              case e @ Elem(_, "a", attribs, _, children @_*) =>
+                val ident = e \@ "href"
+                ctx.resolveLink(Decl.this, ident.split('.')) match {
+                  case Some(token) =>
+                    val url = token.pathRelativeTo(Decl.this).toUrl
+                    val attrib = Attribute("href", Seq(Text(url)), Null)
+                    Elem(null, "a", attribs.append(attrib), TopScope, true, children :_*)
+                  case None => e
+                }
+              case e => e
+            }
+        }
+        val out = (new RuleTransformer(rewriter))(raw).child
+        <div>{out}</div>
+      case Some(Left(e)) =>
+        <div><b>Malformed markdown</b>: {Text(e.message)}</div>
+      case None =>
+        Text("")
+    }
+
+  /** Generates the HTML output for this declaration. */
+  def toHtml(implicit ctx: Resolver): Node
+
+  override def equals(o: Any): Boolean =
+    this match {
+      case other: Decl => this.token == other.token
+      case _ => false
+    }
+
+  override def hashCode(): Int = token.hashCode
+
+}
 
 object Decl {
 

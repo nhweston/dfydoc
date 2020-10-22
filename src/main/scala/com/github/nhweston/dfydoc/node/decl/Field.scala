@@ -10,7 +10,7 @@ case class Field(
   name: String,
   token: Token,
   typ: String,
-  doc: Option[String],
+  override val doc: Option[String],
 ) extends Decl {
 
   lazy val _kwd = "var"
@@ -19,9 +19,9 @@ case class Field(
 
   override def toHtml(implicit ctx: Resolver): Node =
     <div>
-      <a name={aname}/>
+      <a name={path.getAnchorUrl}/>
       <p>{_kwd} {_name}: {_typ}</p>
-      {_doc(this)}
+      {docHtml}
     </div>
 
 }

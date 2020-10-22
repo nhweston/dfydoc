@@ -1,8 +1,8 @@
 package com.github.nhweston.dfydoc.node.decl
 
 import com.github.nhweston.dfydoc.Resolver
-import com.github.nhweston.dfydoc.node.{Decl, Resolvable, Token}
 import com.github.nhweston.dfydoc.node.Decl.Modifier
+import com.github.nhweston.dfydoc.node.{Decl, Token}
 import play.api.libs.json.Json
 
 import scala.xml.{Node, Text}
@@ -13,10 +13,10 @@ case class Module(
   modifiers: Seq[Modifier],
   refines: Option[String],
   decls: Seq[Decl],
-  doc: Option[String],
+  override val doc: Option[String],
 ) extends Decl {
 
-  override lazy val children: Seq[Resolvable] = decls
+  override lazy val children: Seq[Decl] = decls
 
   override def toHtml(implicit ctx: Resolver): Node = {
     val _kws = Text((modifiers :+ "module").mkString(" "))
@@ -27,9 +27,9 @@ case class Module(
         case None => Text("")
       }
     <div class="sub">
-      <a name={aname}/>
+      <a name={path.getAnchorUrl}/>
       <p>{_kws} {_name}{_ref}</p>
-      {_doc(this)}
+      {docHtml}
       {decls.map(_.toHtml)}
     </div>
   }

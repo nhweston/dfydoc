@@ -6,11 +6,11 @@ import com.github.nhweston.dfydoc.Resolver
 
 import scala.xml.{Node, Text}
 
+/** Represents a source directory. Note that `path` is `None` if this is the root directory. */
 case class SrcDir(
-  name: String,
-  isRoot: Boolean,
-  sub: Map[String, SrcPath],
-) extends SrcPath {
+  path: Option[String],
+  sub: Map[String, Src] = Map.empty,
+) extends Src {
 
   lazy val (files, subdirs) =
     sub.values.toSeq.foldLeft(Seq.empty[SrcFile], Seq.empty[SrcDir]) {
@@ -26,10 +26,10 @@ case class SrcDir(
     subdirs match {
       case Nil => Text("")
       case subdirs =>
-        <h2>{if (isRoot) "Directories" else "Subdirectories"}</h2>
+        <h2>{if (path.isEmpty) "Directories" else "Subdirectories"}</h2>
         <ul>{
           subdirs.map { subdir =>
-            <li><a href={s"${subdir.name}/index.html"}>{subdir.name}</a></li>
+            <li><a href={s"${subdir.path.get}/index.html"}>{subdir.path.get}</a></li>
           }
         }</ul>
     }
@@ -46,13 +46,13 @@ case class SrcDir(
         }</ul>
     }
 
-  lazy val index: Node =
+  def index(implicit ctx: Resolver): Node =
     <html>
       <head>
-        <title>{name}</title>
+        <title>{path.getOrElse(ctx.projectName)}</title>
       </head>
       <body>
-        <h1>{name}</h1>
+        <h1>{path.getOrElse(ctx.projectName)}</h1>
         {_subdirs}
         {_files}
       </body>
@@ -63,9 +63,11 @@ case class SrcDir(
   ///////////
 
   def write(root: String)(implicit ctx: Resolver): Unit = {
-    println(s"Root: $root")
-    println(s"Name: $name")
-    val fOut = if (isRoot) new File(root) else new File(root, name)
+    val fOut =
+      path match {
+        case Some(path) => new File(root, path)
+        case None => new File(root)
+      }
     fOut.mkdir()
     writeIndex(fOut.getAbsolutePath)
     for (file <- files)
@@ -74,7 +76,7 @@ case class SrcDir(
       subdir.write(fOut.getAbsolutePath)
   }
 
-  def writeIndex(root: String): Unit = {
+  def writeIndex(root: String)(implicit ctx: Resolver): Unit = {
     val f = new File(root, "index.html")
     val bos = new BufferedOutputStream(new FileOutputStream(f))
     bos.write("<!DOCTYPE html>\n".getBytes)

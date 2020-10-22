@@ -1,12 +1,13 @@
 package com.github.nhweston.dfydoc.node
 
+import com.github.nhweston.dfydoc.Resolver
 import play.api.libs.json.Json
 
 case class Token(
   file: String,
   line: Int,
   col: Int,
-) extends DocNode {
+) {
 
   override lazy val toString: String = s"$file:$line:$col"
 
@@ -17,6 +18,8 @@ case class Token(
       case other: Token => this.toString == other.toString
       case _ => false
     }
+
+  def decl(implicit ctx: Resolver): Decl = ctx.tokensToNodes(this)
 
 }
 

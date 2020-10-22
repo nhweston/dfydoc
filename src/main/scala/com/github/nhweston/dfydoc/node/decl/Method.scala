@@ -17,7 +17,7 @@ case class Method(
   vparams: Seq[ValueParam],
   returns: Seq[ValueParam],
   spec: Seq[Spec],
-  doc: Option[String],
+  override val doc: Option[String],
 ) extends Decl {
 
   override def toHtml(implicit ctx: Resolver): Node = {
@@ -31,9 +31,9 @@ case class Method(
         case returns => <span>returns {ValueParam.toHtml(returns, this)}</span>
       }
     <div>
-      <a name={aname}/>
+      <a name={path.getAnchorUrl}/>
       <p>{_kws} {_name}{_tparams}{_vparams}<br/>{_ret}</p>
-      {_doc(this)}
+      {docHtml}
     </div>
   }
 

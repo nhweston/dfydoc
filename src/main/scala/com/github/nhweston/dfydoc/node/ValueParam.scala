@@ -6,16 +6,15 @@ import play.api.libs.json.Json
 import scala.xml.{Node, Text}
 
 case class ValueParam(
-  name: Option[String],
+  name: String,
+  token: Token,
   typ: TypeRef,
-  doc: Option[String],
-) extends DocNode {
+  override val doc: Option[String],
+) extends Decl {
 
-  def toHtml(parent: Resolvable)(implicit ctx: Resolver): Node =
-    name match {
-      case Some(name) => <span>{name}: {typ.toHtml(parent)}</span>
-      case None => typ.toHtml(parent)
-    }
+  def toHtml(implicit ctx: Resolver): Node =
+    if (name.isEmpty) typ.toHtml
+    else  <span>{name}: {typ.toHtml}</span>
 
 }
 
@@ -23,7 +22,7 @@ object ValueParam {
 
   def toHtml(
     vps: Seq[ValueParam],
-    parent: Resolvable,
+    parent: Decl,
   )(implicit ctx: Resolver): Node =
     vps match {
       case Nil =>
@@ -31,7 +30,7 @@ object ValueParam {
       case vps =>
         <span>{
           Util.intersperse(
-            vps.map(_.toHtml(parent)),
+            vps.map(_.toHtml),
             Text("("),
             Text(", "),
             Text(")"),

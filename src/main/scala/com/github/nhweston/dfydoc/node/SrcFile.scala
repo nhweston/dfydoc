@@ -11,7 +11,7 @@ case class SrcFile(
   path: String,
   decls: Seq[Decl],
   includes: Seq[String],
-) extends SrcPath with Resolvable {
+) extends Src {
 
   lazy val name = path.split('/').last
 
@@ -37,11 +37,6 @@ case class SrcFile(
         </div>
       </body>
     </html>
-
-  override lazy val token: Token =
-    Token(path, -1, -1)
-
-  override def children: Seq[Resolvable] = decls
 
 }
 
