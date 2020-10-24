@@ -166,16 +166,6 @@ case class Resolver(
   def resolveLink(root: Decl, path: Seq[String]): Option[Decl] = {
     // try the inner-most scope
     traverse(root, path)
-      // try included files
-      .orElse {
-        val includes =
-          for {
-            includer <- files.filter(_.path == root.token.file)
-            includePath <- includer.includes
-            include <- files.filter(_.path == includePath)
-          } yield include
-        tryTraverseAll(includes, path)
-      }
       // try ancestral scopes
       .orElse(
         parent(root.token) match {
@@ -186,6 +176,16 @@ case class Resolver(
             traverse(rootFile, path)
         }
       )
+      // try included files
+      .orElse {
+        val includes =
+          for {
+            includer <- files.filter(_.path == root.token.file)
+            includePath <- includer.includes
+            include <- files.filter(_.path == includePath)
+          } yield include
+        tryTraverseAll(includes, path)
+      }
   }
 
 }
