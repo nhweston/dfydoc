@@ -17,7 +17,7 @@ trait Decl {
   /** User-written documentation, if any. */
   def doc: Option[String] = None
 
-  /** All declarations contained within this nodes. */
+  /** All declarations contained within this node. */
   def children: Seq[Decl] = Seq.empty
 
   /** Uniquely identifies this node and specifies its containing file. */
