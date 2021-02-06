@@ -3,233 +3,224 @@ package com.github.nhweston.dfydoc
 import java.io.File
 import java.nio.file.Paths
 
-import com.github.nhweston.dfydoc.Resolver._
-import com.github.nhweston.dfydoc.node._
+import com.github.nhweston.dfydoc.DocNode.{Tokened, SourceDirectory, SourceFile, Token}
+import com.github.nhweston.dfydoc.Resolver.Path
 
 import scala.annotation.tailrec
 import scala.jdk.javaapi.CollectionConverters.asScala
 
-case class Resolver(
-  rootDirPath: String,
-  files: Seq[SrcFile],
+class Resolver (
+  val pathIn: String,
+  val pathOut: String,
+  val files: Seq[SourceFile],
 ) {
-
-  lazy val projectName = (new File(rootDirPath)).getName
 
   implicit val self: Resolver = this
 
-  /** The root directory. Evaluation resolves the directory structure of the Dafny program. */
-  lazy val root: SrcDir = {
-    val rootDirPathAbs = Paths.get(rootDirPath).toRealPath()
-    /** Inserts `file` at `path` relative to `dir`. */
+  lazy val projectName = (new File(pathIn)).getName
+
+  lazy val root: SourceDirectory = {
+    val pathAbsolute = Paths.get(pathIn).toRealPath()
+    /** Inserts `file` at `path` relative to `directory`. */
     def insertFile(
-      file: SrcFile,
-      dir: SrcDir,
+      file: SourceFile,
+      directory: SourceDirectory,
       path: Seq[String],
-    ): SrcDir =
-      (dir, path) match {
-        case (SrcDir(_, sub), fileName +: Nil) =>
-          dir.copy(sub = sub.updated(fileName, file))
-        case (SrcDir(_, sub), dirName +: (tl @ _ +: _)) =>
-          dir.copy(
-            sub = sub.updatedWith(dirName) {
-              case Some(subdir: SrcDir) => Some(insertFile(file, subdir, tl))
-              case None => Some(insertFile(file, SrcDir(Some(dirName), Map.empty), tl))
+    ): SourceDirectory = {
+      val SourceDirectory(_, contents) = directory
+      path match {
+        case fileName +: Nil =>
+          // insert the file here
+          directory.copy(contents = contents.updated(fileName, file))
+        case subdirectoryName +: (tl @ (_ +: _)) =>
+          // recurse to next directory
+          directory.copy(
+            contents = contents.updatedWith(subdirectoryName) {
+              case Some(subdirectory: SourceDirectory) =>
+                // subdirectory already exists
+                Some(insertFile(file, subdirectory, tl))
+              case None =>
+                // subdirectory does not exist, create it
+                val subdirectory = SourceDirectory(directory.path :+ subdirectoryName, Map.empty)
+                Some(insertFile(file, subdirectory, tl))
+              case Some(file: SourceFile) =>
+                throw new MatchError(file)
             }
           )
+        case Nil =>
+          throw new MatchError(Nil)
       }
+    }
     // start with empty root directory
-    val root = SrcDir(None, Map.empty)
+    val root = SourceDirectory(Seq.empty, Map.empty)
     // add all files
-    files.foldLeft(root) { case (dir, file) =>
-      val pathRaw = Paths.get(rootDirPathAbs.toString, file.path)
-      val path = asScala(rootDirPathAbs.relativize(pathRaw).iterator()).map(_.toString).toSeq
-      insertFile(file, dir, path)
+    files.foldLeft(root) { (directory, file) =>
+      val pathRaw = Paths.get(pathAbsolute.toString, file.path.mkString(File.separator))
+      val path = asScala(pathAbsolute.relativize(pathRaw).iterator()).map(_.toString).toSeq
+      insertFile(file, directory, path)
     }
   }
 
-  lazy val tokensToPaths: Map[Token, DeclPath] = {
-    val builder = Map.newBuilder[Token, DeclPath]
-    def auxSrc(src: Src, path: DeclPath): Unit =
-      src match {
-        case SrcDir(name, sub) =>
-          for ((_, next) <- sub)
-            auxSrc(next, DeclPath(name.toSeq))
-        case file @ SrcFile(_, decls, _) =>
-          for (decl <- decls)
-            auxDecl(decl, path.appendFilePath(file.name))
+  lazy val tokensToPaths: Map[Token, Path] = {
+    val builder = Map.newBuilder[Token, Path]
+    def auxFile(directory: SourceDirectory): Unit = {
+      val SourceDirectory(filePath, contents) = directory
+      val path = Path(filePath, Seq.empty)
+      contents.values.foreach {
+        case subdirectory: SourceDirectory =>
+          auxFile(subdirectory)
+        case file: SourceFile =>
+          auxAnchor(file, path.appendFile(file.name))
       }
-    def auxDecl(decl: Decl, path: DeclPath): Unit = {
-      val pathNext = path.appendAnchorPath(decl.name)
-      builder += (decl.token -> pathNext)
-      for (child <- decl.children)
-        auxDecl(child, pathNext)
     }
-    auxSrc(root, DeclPath())
+    def auxAnchor(node: Tokened, path: Path): Unit = {
+      builder += (node.token -> path)
+      node.children.foreach {
+        case child: Tokened =>
+          auxAnchor(child, path.appendAnchor(child.name))
+        case _ => ()
+      }
+    }
+    auxFile(root)
     builder.result()
   }
 
-  val tokensToNodes =
-    LazyMap[Token, Decl] { token =>
-      val file = files.find(_.path == token.file).get
-      val anchor = tokensToPaths(token).anchor
-      traverse(file, anchor).get
+  lazy val tokensToNodes: Map[Token, Tokened] = {
+    val builder = Map.newBuilder[Token, Tokened]
+    def auxDirectory(directory: SourceDirectory): Unit = {
+      for (file <- directory.files)
+        auxTokened(file)
+      for (subdirectory <- directory.subdirectories)
+        auxDirectory(subdirectory)
     }
+    def auxTokened(node: Tokened): Unit = {
+      builder += (node.token -> node)
+      for (child <- node.children)
+        auxTokened(child)
+    }
+    auxDirectory(root)
+    builder.result()
+  }
 
-  /** Returns the containing declaration of `token` or `None` if it is top-level. */
-  val parent =
-    LazyMap[Token, Option[Decl]] { token =>
-      val path = tokensToPaths(token)
-      path.anchor match {
-        case init :+ _ =>
-          val file = files.find(_.path == token.file).get
-          traverse(file, init)
-        case _ => None
+  lazy val tokensToParents: Map[Token, Tokened] = {
+    val builder = Map.newBuilder[Token, Tokened]
+    def auxDirectory(directory: SourceDirectory): Unit = {
+      for (file <- directory.files)
+        auxTokened(file, None)
+      for (subdirectory <- directory.subdirectories)
+        auxDirectory(subdirectory)
+    }
+    def auxTokened(node: Tokened, parent: Option[Tokened]): Unit = {
+      parent match {
+        case Some(parent) =>
+          builder += (node.token -> parent)
+        case None => ()
       }
+      val parentNext =
+        node match {
+          case parentNext: Tokened => Some(parentNext)
+          case _ => parent
+        }
+      for (child <- node.children)
+        auxTokened(child, parentNext)
     }
+    auxDirectory(root)
+    builder.result()
+  }
 
-  /** Get the declaration at `path` from `root`. */
   @tailrec
   final def traverse(
-    root: Decl,
+    root: Tokened,
     path: Seq[String],
-  ): Option[Decl] =
+  ): Option[Tokened] =
     path match {
       case hd +: tl =>
-        root.children.find(_.name == hd) match {
-          case Some(sub) => traverse(sub, tl)
+        root.children.find {
+          case child: Tokened => child.name == hd
+          case _ => false
+        } match {
+          case Some(child) => traverse(child, tl)
           case None => None
         }
       case Nil =>
         Some(root)
     }
 
-  /** Get the declaration at `path` from `file`. */
-  def traverse(
-    file: SrcFile,
-    path: Seq[String],
-  ): Option[Decl] =
-    path match {
-      case hd +: tl =>
-        file.decls.find(_.name == hd) match {
-          case Some(decl) =>
-            traverse(decl, tl) match {
-              case Some(result) => Some(result)
-              case None => None
-            }
-          case None =>
-            println(s"WARNING: Cannot find file $hd")
-            None
-        }
-      case Nil => None
-    }
-
-  /** Attempt to traverse to `path` from each file in `files`. Returns the first success. */
-  @tailrec
-  final def tryTraverseAll(
-    files: Seq[SrcFile],
-    path: Seq[String],
-  ): Option[Decl] =
-    files match {
-      case hd +: tl =>
-        traverse(hd, path) match {
-          case Some(result) => Some(result)
-          case None => tryTraverseAll(tl, path)
-        }
-      case Nil => None
-    }
-
-  /** Attempt to traverse to `path` from each ancestor of `decl`. */
-  def tryTraverseAncestors(
-    decl: Decl,
-    path: Seq[String],
-  ): Option[Decl] = {
-    val rootFile = files.find(_.path == decl.token.file).get
+  def resolveLink(root: Tokened, path: Seq[String]): Option[Tokened] = {
     @tailrec
-    def aux(
-      rootPath: Seq[String] = tokensToPaths(decl.token).anchor,
-      targetPath: Seq[String] = path,
-    ): Option[Decl] =
-      rootPath match {
-        case init :+ _ =>
-          traverse(rootFile, rootPath ++ path) match {
-            case Some(result) => Some(result)
-            case None => aux(init, path)
+    def resolveInFile(root: Tokened): Either[SourceFile, Tokened] =
+      traverse(root, path) match {
+        case Some(result) =>
+          Right(result)
+        case None =>
+          root match {
+            case file: SourceFile =>
+              Left(file)
+            case root =>
+              resolveInFile(tokensToParents(root.token))
+          }
+      }
+    @tailrec
+    def resolveInIncludes(includes: Seq[Seq[String]]): Option[Tokened] =
+      includes match {
+        case hd +: tl =>
+          traverse(root, hd) match {
+            case Some(file: SourceFile) =>
+              traverse(file, path) match {
+                case Some(node) => Some(node)
+                case None => resolveInIncludes(tl)
+              }
+            case _ => resolveInIncludes(tl)
           }
         case Nil =>
-          traverse(rootFile, rootPath)
+          None
       }
-    aux()
+    resolveInFile(root) match {
+      case Right(result) => Some(result)
+      case Left(file) => resolveInIncludes(file.includes)
+    }
   }
 
-  /** Returns token pointed to by a link. */
-  def resolveLink(root: Decl, path: Seq[String]): Option[Decl] = {
-    // try the inner-most scope
-    traverse(root, path)
-      // try ancestral scopes
-      .orElse(
-        parent(root.token) match {
-          case Some(parent) =>
-            tryTraverseAncestors(parent, path)
-          case None =>
-            val rootFile = files.find(_.path == root.token.file).get
-            traverse(rootFile, path)
-        }
-      )
-      // try included files
-      .orElse {
-        val includes =
-          for {
-            includer <- files.filter(_.path == root.token.file)
-            includePath <- includer.includes
-            include <- files.filter(_.path == includePath)
-          } yield include
-        tryTraverseAll(includes, path)
-      }
-  }
 
 }
 
 object Resolver {
 
-  type TokensToPaths = Map[Token, DeclPath]
-  type TokensToNodes = Map[Token, Decl]
-
-  case class DeclPath(
-    file: Seq[String] = Seq.empty,
-    anchor: Seq[String] = Seq.empty,
+  case class Path(
+    file: Seq[String],
+    anchor: Seq[String],
   ) {
 
-    def appendFilePath(name: String) =
+    def appendFile(name: String) =
       copy(file = file :+ name)
 
-    def appendAnchorPath(name: String) =
+    def appendAnchor(name: String) =
       copy(anchor = anchor :+ name)
 
-    def relativise(root: DeclPath): DeclPath = {
-      val DeclPath(tDirs :+ tFile, tAnchor) = this
-      val DeclPath(rDirs :+ _, _) = root
+    def relativize(root: Path): Path = {
+      val Path(thisDirectories :+ thisFile, thisAnchor) = this
+      val Path(rootDirectories :+ _, _) = root
       @tailrec
       def aux(
-        tDirs: Seq[String] = tDirs,
-        rDirs: Seq[String] = rDirs,
+        thisDirectories: Seq[String] = thisDirectories,
+        rootDirectories: Seq[String] = rootDirectories,
       ): Seq[String] =
-        (tDirs, rDirs) match {
-          case (tHd +: tTl, rHd +: rTl) if (tHd == rHd) =>
+        (thisDirectories, rootDirectories) match {
+          case (thisHd +: thisTl, rootHd +: rootTl) if (thisHd == rootHd) =>
             // pop common ancestor
-            aux(tTl, rTl)
+            aux(thisTl, rootTl)
           case _ =>
             // move to inner-most common ancestor and append remaining path
-            rDirs.map(_ => "..") ++ tDirs :+ tFile
+            rootDirectories.map(_ => "..") ++ thisDirectories :+ thisFile
         }
-      DeclPath(aux(), tAnchor)
+      Path(aux(), thisAnchor)
     }
 
-    def getFileUrl: String = file.mkString("/")
+    def fileUrl: String = file.mkString("/")
 
-    def getAnchorUrl: String = anchor.mkString("~")
+    def anchorUrl: String = anchor.mkString("~")
 
-    def toUrl: String = s"$getFileUrl.html#$getAnchorUrl"
+    def url: String = s"$fileUrl.html#$anchorUrl"
 
   }
 

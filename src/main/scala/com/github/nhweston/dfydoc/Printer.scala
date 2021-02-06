@@ -15,7 +15,7 @@ case class Printer(
       val tree = sr.getTree(f.getAbsolutePath)
       pprint.pprintln(tree)
       val path = Paths.get(f.getAbsolutePath).toRealPath().toFile.getParent
-      val dir = Resolver(path, tree).root
+      val dir = (new Resolver(path, "", tree)).root
       pprint.pprintln(dir)
     }
 

@@ -45,6 +45,6 @@ object Util {
     builder.result()
   }
 
-  val md2html = Transformer.from(Markdown).to(HTML).build.transform(_: String)
+  val markdownToHtml = Transformer.from(Markdown).to(HTML).build.transform(_: String)
 
 }
