@@ -1,4 +1,5 @@
-SET DAFNYDOC_JAR=/home/nhweston/dc/pr/dfy/doc/bin/dafnydoc.jar
-SET DAFNY_SERVER_PATH=/home/nhweston/dc/pr/dfy/cmp/Binaries/DafnyServer.exe
+SET THIS_DIR=%~dp0
+SET DAFNYDOC_JAR=%THIS_DIR% and /dafnydoc.jar
+SET DAFNY_SERVER_PATH=%THIS_DIR% and /cmp/Binaries/DafnyServer.exe
 
 START java -jar dafnydoc.jar %0 %DAFNY_SERVER_PATH %*
