@@ -21,7 +21,8 @@ case class ServerRunner(
   @tailrec
   final def read(result: Option[JsValue] = None): JsValue = {
     val line = in.readLine()
-    if (verbose && line != null) println(line)
+    if (verbose && line != null)
+      println(line)
     line match {
       case null => read(result)
       case Eom() => result.getOrElse(JsNull)
@@ -31,8 +32,8 @@ case class ServerRunner(
   }
 
   def getJson(path: String): JsValue = {
-    val fileName = path.split('/').last
-    val json = s"""{"args":[],"filename":"$fileName","source":"$path","sourceIsFile":true}"""
+    println(s"PATH: $path")
+    val json = s"""{"args":[],"filename":"$path","source":"$path","sourceIsFile":true}"""
     val enc = Base64.getEncoder.encodeToString(json.getBytes)
     out.write(s"doctree\n$enc\n[[DAFNY-CLIENT: EOM]]\n".getBytes)
     out.flush()

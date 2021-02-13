@@ -21,9 +21,9 @@ object Main {
 
           case Right(Generate(file, out, verbose)) =>
             implicit val sr = ServerRunner(serverPath, verbose)
-            val tree = sr.getTree(file)
-            val path = Paths.get(file).toRealPath().toFile.getParent
-            implicit val ctx = new Resolver(path, out, tree)
+            val path = Paths.get(file).toRealPath().toFile
+            val tree = sr.getTree(path.getAbsolutePath)
+            implicit val ctx = new Resolver(path.getParent, out, tree)
             ctx.root.write()
 
           case Right(Print(file, content, verbose)) =>

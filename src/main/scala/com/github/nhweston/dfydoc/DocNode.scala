@@ -118,6 +118,7 @@ object DocNode {
     decls: Seq[Decl],
     includes: Seq[Seq[String]],
   ) extends Source with Tokened {
+    println(s"File: $path")
 
     override def token: Token = Token(path, 0, 0)
 
@@ -158,6 +159,7 @@ object DocNode {
     path: Seq[String],
     contents: Map[String, Source],
   ) extends Source {
+    println(s"Directory: $path")
 
     lazy val (files, subdirectories) = {
       contents.values.toSeq.foldLeft((Seq.empty[SourceFile], Seq.empty[SourceDirectory])) {
@@ -776,7 +778,7 @@ object DocNode {
       val fmtAux = Json.format[Aux]
       override def reads(json: JsValue): JsResult[SourceFile] =
         fmtAux.reads(json).map { case Aux(pathAux, decls, includes) =>
-          val path = pathAux.split(File.separatorChar).toSeq
+          val path = pathAux.split(File.separatorChar).toSeq.filter(_.nonEmpty)
           SourceFile(path, decls, includes)
         }
       override def writes(o: SourceFile): JsObject = {

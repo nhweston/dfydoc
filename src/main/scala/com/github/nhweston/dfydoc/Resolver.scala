@@ -31,7 +31,7 @@ class Resolver (
       path match {
         case fileName +: Nil =>
           // insert the file here
-          directory.copy(contents = contents.updated(fileName, file))
+          directory.copy(contents = contents.updated(fileName, file.copy(path = path)))
         case subdirectoryName +: (tl @ (_ +: _)) =>
           // recurse to next directory
           directory.copy(
@@ -55,8 +55,11 @@ class Resolver (
     val root = SourceDirectory(Seq.empty, Map.empty)
     // add all files
     files.foldLeft(root) { (directory, file) =>
-      val pathRaw = Paths.get(pathAbsolute.toString, file.path.mkString(File.separator))
+      val pathRaw = Paths.get(file.path.mkString(File.separator, File.separator, ""))
+      println(s"Path raw: $pathRaw")
+      println(s"Path abs: $pathAbsolute")
       val path = asScala(pathAbsolute.relativize(pathRaw).iterator()).map(_.toString).toSeq
+      println(s"Relativized path: $path")
       insertFile(file, directory, path)
     }
   }
