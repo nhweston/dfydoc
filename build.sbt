@@ -16,6 +16,7 @@ lazy val root =
       "org.planet42" %% "laika-core" % "0.16.1",
       "org.scala-lang.modules" %% "scala-xml" % "1.2.0",
     ),
+    unmanagedResourceDirectories in Compile := Seq(baseDirectory.value / "data"),
     assemblyJarName in assembly := "dafnydoc.jar",
     assemblyOutputPath in assembly := file(".") / "bin" / "dafnydoc.jar",
     mainClass in assembly := Some("com.github.nhweston.dfydoc.Main"),

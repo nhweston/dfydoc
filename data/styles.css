@@ -1,0 +1,43 @@
+html {
+    display: table;
+    margin: auto;
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    background-color: #eeeeee;
+    display: table-cell;
+    font-family: 'Trebuchet MS', sans-serif;
+    height: 100%;
+    width: 100%;
+}
+
+#content {
+    border: 1px solid #cccccc;
+    background-color: #ffffff;
+    width: 80%;
+    height: 100%;
+    margin: 16px auto 256px;
+    padding: 16px;
+}
+
+.decl {
+    margin-left: 24px;
+    margin-right: 0;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.keyword {
+    font-weight: bold;
+    color: purple;
+}
+
+.identifier, .code {
+    font-family: 'DejaVu Sans Mono', monospace;
+}
+
+.name {
+    font-weight: bold;
+}

@@ -1,7 +1,8 @@
 package com.github.nhweston.dfydoc
 
 import java.io.File
-import java.nio.file.Paths
+import java.net.URI
+import java.nio.file.{FileSystems, Files, Paths}
 
 import com.github.nhweston.dfydoc.Options._
 
@@ -25,6 +26,7 @@ object Main {
             val tree = sr.getTree(path.getAbsolutePath)
             implicit val ctx = new Resolver(path.getParent, out, tree)
             ctx.root.write()
+            copyCssFile()
 
           case Right(Print(file, content, verbose)) =>
             println(file)
@@ -49,5 +51,14 @@ object Main {
       case x =>
         throw new MatchError(x)
     }
+
+  def copyCssFile()(implicit ctx: Resolver): Unit = {
+    val cssFileUri = getClass.getClassLoader.getResource("styles.css").toURI
+    val Seq(fsUri, path) = cssFileUri.toString.split('!').toSeq
+    val uri = URI.create(fsUri)
+    val fs = FileSystems.newFileSystem(uri, new java.util.HashMap[String, String])
+    val cssFile = fs.getPath(path)
+    Files.copy(cssFile, Paths.get(ctx.pathOut, "styles.css"))
+  }
 
 }
