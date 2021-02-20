@@ -56,10 +56,7 @@ class Resolver (
     // add all files
     files.foldLeft(root) { (directory, file) =>
       val pathRaw = Paths.get(file.path.mkString(File.separator, File.separator, ""))
-      println(s"Path raw: $pathRaw")
-      println(s"Path abs: $pathAbsolute")
       val path = asScala(pathAbsolute.relativize(pathRaw).iterator()).map(_.toString).toSeq
-      println(s"Relativized path: $path")
       insertFile(file, directory, path)
     }
   }

@@ -26,7 +26,8 @@ object Main {
             val tree = sr.getTree(path.getAbsolutePath)
             implicit val ctx = new Resolver(path.getParent, out, tree)
             ctx.root.write()
-            copyCssFile()
+            val cssFile = Paths.get(getClass.getClassLoader.getResource("styles.css").toURI)
+            Files.copy(cssFile, Paths.get(ctx.pathOut, "styles.css"))
 
           case Right(Print(file, content, verbose)) =>
             println(file)

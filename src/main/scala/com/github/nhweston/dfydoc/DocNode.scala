@@ -118,7 +118,6 @@ object DocNode {
     decls: Seq[Decl],
     includes: Seq[Seq[String]],
   ) extends Source with Tokened {
-    println(s"File: $path")
 
     override def token: Token = Token(path, 0, 0)
 
@@ -159,7 +158,6 @@ object DocNode {
     path: Seq[String],
     contents: Map[String, Source],
   ) extends Source {
-    println(s"Directory: $path")
 
     lazy val (files, subdirectories) = {
       contents.values.toSeq.foldLeft((Seq.empty[SourceFile], Seq.empty[SourceDirectory])) {
